@@ -5,40 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>そろばん たしざん</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Zen Maru Gothic', sans-serif;
       background-color: #f0fdf4;
+      background-image: linear-gradient(
+        -45deg, 
+        rgba(255, 255, 255, 0.7) 25%, 
+        transparent 25%, 
+        transparent 50%, 
+        rgba(255, 255, 255, 0.7) 50%, 
+        rgba(255, 255, 255, 0.7) 75%, 
+        transparent 75%, 
+        transparent
+      );
+      background-size: 40px 40px;
+      animation: moveStripe 2s linear infinite;
       touch-action: manipulation;
     }
-    /* そろばんの拡大表示用ラッパー */
+    @keyframes moveStripe {
+      0% { background-position: 0 0; }
+      100% { background-position: 40px 40px; }
+    }
     .soroban-wrapper {
       transition: transform 0.3s ease, margin-bottom 0.3s ease;
       transform-origin: top center;
     }
     .soroban-large {
       transform: scale(1.5);
-      margin-bottom: 110px; /* スケールした分、下部のボタンに重ならないよう余白を追加 */
+      margin-bottom: 110px;
     }
     .soroban-container {
-      background-color: #d97706; /* 木枠の色 */
+      background-color: #d97706; 
       padding: 10px;
       border-radius: 12px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
     canvas {
-      background-color: #fef3c7; /* そろばんの背景色 */
+      background-color: #fef3c7;
       border-radius: 8px;
       display: block;
       margin: 0 auto;
       touch-action: none;
     }
-    /* 筆算のハイライト用 */
     .hissan-active {
-      background-color: #fef08a; /* 黄色背景 */
+      background-color: #fef08a;
       border-radius: 4px;
-      color: #dc2626; /* 赤文字 */
+      color: #dc2626;
     }
     button {
       transition: transform 0.1s;
@@ -51,7 +66,7 @@
 <body class="text-gray-800 h-screen flex flex-col items-center">
 
   <!-- ホーム画面 -->
-  <div id="homeScreen" class="flex flex-col items-center justify-center w-full h-full max-w-md p-4 relative">
+  <div id="homeScreen" class="flex flex-col items-center justify-start w-full h-full max-w-md p-4 relative pt-12">
     <div class="absolute top-4 right-4">
       <button onclick="openSettings()" class="p-2 bg-white rounded-full shadow-md text-gray-600 border border-gray-200">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -61,9 +76,20 @@
       </button>
     </div>
     
-    <h1 class="text-3xl font-bold text-green-600 mb-8 text-center">そろばん たしざん<br>れんしゅう</h1>
+    <div class="w-full text-center mb-6">
+      <span class="bg-blue-100 text-blue-600 font-bold px-6 py-2 rounded-full text-sm shadow-sm tracking-widest inline-block">
+        PICO PICO もんだいしゅう
+      </span>
+    </div>
+
+    <h1 class="text-3xl font-bold text-green-600 mb-6 text-center leading-tight">そろばん たしざん<br>れんしゅう</h1>
     
+    <p class="text-sm font-bold text-gray-600 mb-8 text-center">そろばんがある子は、そろばんをよういしてね</p>
+
     <div class="w-full space-y-4">
+      <button onclick="startGame('intro')" class="w-full py-4 bg-pink-400 text-white text-xl font-bold rounded-2xl shadow-lg border-b-4 border-pink-600">
+        すうじのおきかた
+      </button>
       <button onclick="startGame('1digit')" class="w-full py-4 bg-blue-400 text-white text-xl font-bold rounded-2xl shadow-lg border-b-4 border-blue-600">
         1けた ＋ 1けた
       </button>
@@ -94,7 +120,7 @@
     </div>
 
     <!-- 筆算エリア -->
-    <div class="bg-white p-4 rounded-xl shadow-md w-48 flex justify-center mb-4 text-3xl font-bold tracking-widest relative mx-auto">
+    <div id="hissanArea" class="bg-white p-4 rounded-xl shadow-md w-48 flex justify-center mb-4 text-3xl font-bold tracking-widest relative mx-auto">
       <div class="flex flex-col items-end font-mono">
         <!-- 上の数字 -->
         <div class="grid grid-cols-2 gap-2 w-16 mb-1 text-right">
@@ -122,6 +148,11 @@
       </div>
     </div>
 
+    <!-- introモード用メッセージエリア -->
+    <div id="introMessageArea" class="hidden bg-white py-6 px-4 rounded-xl shadow-md w-64 mx-auto mb-4 text-2xl font-bold text-gray-800 tracking-widest text-center border-4 border-pink-100">
+      「<span id="introTargetNum" class="text-pink-600 mx-1 text-5xl font-black"></span>」を<br>おこう
+    </div>
+
     <!-- 解説メッセージエリア -->
     <div id="explainBox" class="hidden w-full bg-blue-50 border-4 border-blue-200 p-4 rounded-xl shadow-sm mb-4 min-h-[7rem] flex items-center justify-center relative">
       <div id="sorobanMessage" class="text-lg text-center font-bold text-gray-700 leading-relaxed w-full">
@@ -133,13 +164,11 @@
     <div class="w-full mb-4 relative flex justify-center mt-2">
       <div id="sorobanWrapper" class="soroban-wrapper">
         <div class="soroban-container">
-          <!-- 桁の表示（漢字） -->
-          <div class="w-[240px] mx-auto grid grid-cols-3 text-center font-bold text-[#8B4513] mb-1 text-sm tracking-widest">
+          <div id="digitLabels" class="w-[240px] mx-auto grid grid-cols-3 text-center font-bold text-[#8B4513] mb-1 text-sm tracking-widest">
             <div>百</div>
             <div>十</div>
             <div>一</div>
           </div>
-          <!-- 幅240, 高さ200で3桁を表示 -->
           <canvas id="sorobanCanvas" width="240" height="200"></canvas>
         </div>
       </div>
@@ -186,49 +215,120 @@
     </div>
   </div>
 
+  <!-- introモード開始モーダル -->
+  <div id="introModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-3xl max-w-sm w-full mx-4 shadow-2xl text-center">
+      <h2 class="text-2xl font-black text-pink-600 mb-6 leading-relaxed">
+        1 から 9 の<br>すうじのおきかたを<br>おぼえよう！
+      </h2>
+      <button onclick="closeIntroModal()" class="w-full py-4 bg-pink-500 text-white text-xl font-bold rounded-xl shadow-md border-b-4 border-pink-700">
+        はじめる
+      </button>
+    </div>
+  </div>
+
+  <!-- クリアモーダル -->
+  <div id="clearModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-3xl max-w-sm w-full mx-4 shadow-2xl text-center">
+      <div class="text-6xl mb-4">🎉</div>
+      <h2 class="text-2xl font-black text-yellow-500 mb-6 leading-relaxed">
+        ぜんぶ おわったよ！<br>すごい！
+      </h2>
+      <button onclick="backToHomeFromClear()" class="w-full py-4 bg-blue-500 text-white text-xl font-bold rounded-xl shadow-md border-b-4 border-blue-700">
+        ホームにもどる
+      </button>
+    </div>
+  </div>
+
   <script>
     let mode = '1digit';
     let questionCount = 1;
     let qA = 0;
     let qB = 0;
     
-    // そろばんの状態
-    const columns = [
-      { id: '100s', x: 40, value: 0 },
-      { id: '10s',  x: 120, value: 0 },
-      { id: '1s',   x: 200, value: 0 }
-    ];
+    let activeColumns = [];
     let beadState = {};
 
-    // 画面・状態管理
     let isInteractive = true;
     let explainSteps = [];
     let currentStep = 0;
     
-    // アニメーション管理
     let animationId = null;
     let onAnimationComplete = null;
-    let currentAnimSpeed = 0.2; 
+    let currentAnimSpeed = 0.12; 
     let currentAnimStep = null;
     let currentActionIndex = 0;
     let sequenceTimeoutId = null;
+    let resetColorTimeoutId = null;
 
-    // ゴーストアニメーション用
     let ghostAnimationId = null;
     let ghostState = { active: false, colIndex: 0, val: 0, progress: 0 };
 
     const canvas = document.getElementById('sorobanCanvas');
     const ctx = canvas.getContext('2d');
 
-    // 設定関連
-    function openSettings() {
-      document.getElementById('settingsModal').classList.remove('hidden');
+    let isAudioInitialized = false;
+    let buttonSynth, beadSynth, melodySynth;
+
+    async function initAudio() {
+      if (isAudioInitialized) return;
+      await Tone.start();
+      
+      buttonSynth = new Tone.Synth({
+        oscillator: { type: 'sine' },
+        envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 }
+      }).toDestination();
+      buttonSynth.volume.value = -8;
+
+      beadSynth = new Tone.MembraneSynth({
+        pitchDecay: 0.01,
+        octaves: 2,
+        oscillator: { type: 'square' },
+        envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.01 }
+      }).toDestination();
+      beadSynth.volume.value = -12;
+
+      melodySynth = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.05, decay: 0.1, sustain: 0.3, release: 1 }
+      }).toDestination();
+      melodySynth.volume.value = -8;
+
+      isAudioInitialized = true;
     }
 
-    function closeSettings() {
-      document.getElementById('settingsModal').classList.add('hidden');
+    function playButtonSound() {
+      if (isAudioInitialized && buttonSynth) {
+        buttonSynth.triggerAttackRelease("C6", "32n");
+      }
     }
 
+    function playBeadSound() {
+      if (isAudioInitialized && beadSynth) {
+        const pitches = ["C5", "C#5", "D5"];
+        const pitch = pitches[Math.floor(Math.random() * pitches.length)];
+        beadSynth.triggerAttackRelease(pitch, "32n");
+      }
+    }
+
+    function playSuccessMelody() {
+      if (isAudioInitialized && melodySynth) {
+        const now = Tone.now();
+        melodySynth.triggerAttackRelease("E5", "16n", now);
+        melodySynth.triggerAttackRelease("G5", "16n", now + 0.1);
+        melodySynth.triggerAttackRelease("C6", "4n", now + 0.2);
+      }
+    }
+
+    document.addEventListener('pointerdown', async (e) => {
+      await initAudio();
+      if (e.target.closest('button')) {
+        playButtonSound();
+      }
+    });
+
+    function openSettings() { document.getElementById('settingsModal').classList.remove('hidden'); }
+    function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
     function toggleLargeSoroban(isChecked) {
       const wrapper = document.getElementById('sorobanWrapper');
       if (isChecked) {
@@ -236,9 +336,47 @@
       } else {
         wrapper.classList.remove('soroban-large');
       }
+      localStorage.setItem('largeSoroban', isChecked);
     }
 
-    // ホームへ戻る
+    function setupCanvasForMode() {
+      const digitLabels = document.getElementById('digitLabels');
+      if (mode === 'intro') {
+        canvas.width = 80;
+        activeColumns = [{ id: '1s', x: 40, value: 0 }];
+        digitLabels.className = "w-[80px] mx-auto grid grid-cols-1 text-center font-bold text-[#8B4513] mb-1 text-sm tracking-widest";
+        digitLabels.innerHTML = '<div>一</div>';
+        document.getElementById('hissanArea').classList.add('hidden');
+        document.getElementById('introMessageArea').classList.remove('hidden');
+      } else {
+        canvas.width = 240;
+        activeColumns = [
+          { id: '100s', x: 40, value: 0 },
+          { id: '10s',  x: 120, value: 0 },
+          { id: '1s',   x: 200, value: 0 }
+        ];
+        digitLabels.className = "w-[240px] mx-auto grid grid-cols-3 text-center font-bold text-[#8B4513] mb-1 text-sm tracking-widest";
+        digitLabels.innerHTML = '<div>百</div><div>十</div><div>一</div>';
+        document.getElementById('hissanArea').classList.remove('hidden');
+        document.getElementById('introMessageArea').classList.add('hidden');
+      }
+    }
+
+    function closeIntroModal() {
+      document.getElementById('introModal').classList.add('hidden');
+      generateQuestion();
+    }
+
+    function showClearModal() {
+      document.getElementById('clearModal').classList.remove('hidden');
+      playSuccessMelody();
+    }
+
+    function backToHomeFromClear() {
+      document.getElementById('clearModal').classList.add('hidden');
+      backToHome();
+    }
+
     function backToHome() {
       document.getElementById('gameScreen').classList.add('hidden');
       document.getElementById('gameScreen').classList.remove('flex');
@@ -246,25 +384,39 @@
       clearAnimationQueue();
     }
 
-    // ゲーム開始
     function startGame(selectedMode) {
       mode = selectedMode;
       questionCount = 1;
       document.getElementById('homeScreen').classList.add('hidden');
       document.getElementById('gameScreen').classList.remove('hidden');
       document.getElementById('gameScreen').classList.add('flex');
-      generateQuestion();
+      
+      setupCanvasForMode();
+
+      if (mode === 'intro') {
+        document.getElementById('introModal').classList.remove('hidden');
+      } else {
+        generateQuestion();
+      }
     }
 
-    // 次の問題へ
     function nextQuestion() {
       questionCount++;
       generateQuestion();
     }
 
-    // 問題を作る
     function generateQuestion() {
-      if (mode === '1digit') {
+      if (mode === 'intro') {
+        if (questionCount > 9) {
+          showClearModal();
+          return;
+        }
+        qA = questionCount;
+        qB = 0;
+        document.getElementById('qCountText').innerText = `だい ${questionCount} もん`;
+        document.getElementById('questionTitle').innerText = `すうじのおきかた`;
+        document.getElementById('introTargetNum').innerText = qA;
+      } else if (mode === '1digit') {
         qA = Math.floor(Math.random() * 9) + 1;
         qB = Math.floor(Math.random() * 9) + 1;
       } else if (mode === '2digit1') {
@@ -278,37 +430,33 @@
         }
       }
 
-      // UIリセット
-      document.getElementById('qCountText').innerText = `だい ${questionCount} もん`;
-      document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ？`;
-      
-      let aStr = String(qA).padStart(2, ' ');
-      document.getElementById('hTop10').innerText = aStr[0] === ' ' ? '' : aStr[0];
-      document.getElementById('hTop1').innerText = aStr[1];
-      
-      let bStr = String(qB).padStart(2, ' ');
-      document.getElementById('hBot10').innerText = bStr[0] === ' ' ? '' : bStr[0];
-      document.getElementById('hBot1').innerText = bStr[1];
-      
-      // 答えが見えないように完全に消去＆透明化
-      document.getElementById('hRes100').innerText = '';
-      document.getElementById('hRes10').innerText = '';
-      document.getElementById('hRes1').innerText = '';
+      if (mode !== 'intro') {
+        document.getElementById('qCountText').innerText = `だい ${questionCount} もん`;
+        document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ？`;
+        
+        let aStr = String(qA).padStart(2, ' ');
+        document.getElementById('hTop10').innerText = aStr[0] === ' ' ? '' : aStr[0];
+        document.getElementById('hTop1').innerText = aStr[1];
+        
+        let bStr = String(qB).padStart(2, ' ');
+        document.getElementById('hBot10').innerText = bStr[0] === ' ' ? '' : bStr[0];
+        document.getElementById('hBot1').innerText = bStr[1];
+        
+        document.getElementById('hRes100').innerText = '';
+        document.getElementById('hRes10').innerText = '';
+        document.getElementById('hRes1').innerText = '';
 
-      const resCont = document.getElementById('hResCont');
-      resCont.style.transition = 'none'; // トランジションを切る
-      resCont.classList.remove('opacity-100');
-      resCont.classList.add('opacity-0');
-      // 次のフレームでトランジションを戻す
-      requestAnimationFrame(() => {
-        resCont.style.transition = '';
-      });
-      
-      // ハイライト解除
-      document.getElementById('hTop10').classList.remove('hissan-active');
-      document.getElementById('hTop1').classList.remove('hissan-active');
-      document.getElementById('hBot10').classList.remove('hissan-active');
-      document.getElementById('hBot1').classList.remove('hissan-active');
+        const resCont = document.getElementById('hResCont');
+        resCont.style.transition = 'none'; 
+        resCont.classList.remove('opacity-100');
+        resCont.classList.add('opacity-0');
+        requestAnimationFrame(() => { resCont.style.transition = ''; });
+        
+        document.getElementById('hTop10').classList.remove('hissan-active');
+        document.getElementById('hTop1').classList.remove('hissan-active');
+        document.getElementById('hBot10').classList.remove('hissan-active');
+        document.getElementById('hBot1').classList.remove('hissan-active');
+      }
 
       document.getElementById('explainBox').classList.add('hidden');
       document.getElementById('initialButtons').classList.remove('hidden');
@@ -316,14 +464,18 @@
       document.getElementById('nextQuestionBtn').classList.add('hidden');
       
       isInteractive = true;
-      currentAnimSpeed = 0.2;
+      currentAnimSpeed = 0.12;
 
       initSoroban();
       setSorobanValueInstantly(0); 
-      buildSteps(qA, qB);
+      
+      if (mode === 'intro') {
+        buildIntroSteps(qA);
+      } else {
+        buildSteps(qA, qB);
+      }
     }
 
-    // 答えのテキストをセットする関数
     function setAnswerText() {
       let resStr = String(qA + qB).padStart(3, ' ');
       document.getElementById('hRes100').innerText = resStr[0] === ' ' ? '' : resStr[0];
@@ -331,7 +483,6 @@
       document.getElementById('hRes1').innerText = resStr[2];
     }
 
-    // 運指の解説ステップ生成
     function getAddExplainInfo(a, b, is10sColumn, currentVal, multiplier) {
       if (b === 0) return [];
       
@@ -339,11 +490,9 @@
       let colName = is10sColumn ? "十のくらい" : "一のくらい";
       let targetColName = is10sColumn ? "百のくらい" : "十のくらい";
       
-      // 前置き（文字だけ赤くなる）
       actions.push({ text: `つぎは、${colName}に「${b}」を足すよ。<br>`, val: currentVal, isTextOnly: true });
       
       if (a + b < 10) {
-        // --- 繰り上がりなし ---
         let n1 = a % 5;
         let n5 = Math.floor(a / 5);
         let b1 = b % 5;
@@ -358,14 +507,12 @@
         if (canPlaceDirectly) {
           actions.push({ text: `そのまま「${b}」をおくよ。`, val: currentVal + b * multiplier });
         } else {
-          // 5のまとまりを使う
           let comp5 = 5 - b;
           actions.push({ text: `「${b}」はおけないから、<br>`, val: currentVal, ghost: { colIndex: is10sColumn ? 1 : 2, val: b }, isTextOnly: true }); 
           actions.push({ text: `5をおいて、`, val: currentVal + 5 * multiplier });
           actions.push({ text: `「${comp5}」をはらうよ。`, val: currentVal + (5 - comp5) * multiplier });
         }
       } else {
-        // --- 10への繰り上がりあり ---
         let comp10 = 10 - b; 
         let n1 = a % 5;
         let n5 = Math.floor(a / 5);
@@ -396,7 +543,6 @@
             actions.push({ text: `${targetColName}を上げるよ。`, val: currentVal - comp10 * multiplier + 1 * carryMultiplier });
           }
         } else {
-          // 5を払って入れるパターン
           let addBack = b - 5;
           if (chainCarry) {
             actions.push({ text: `「${addBack}」をあげて、`, val: currentVal + addBack * multiplier });
@@ -413,14 +559,20 @@
       return actions;
     }
 
-    // 解説ステップデータを構築
     function buildSteps(a, b) {
       explainSteps = [];
+      let currentVal = a;
       
+      let aStr = String(a).padStart(2, '0');
+      let bStr = String(b).padStart(2, '0');
+      
+      let b10 = parseInt(bStr[0]);
+      let b1 = parseInt(bStr[1]);
+
       explainSteps.push({
         actions: [
-          { text: `はじめに、`, val: 0, isTextOnly: true },
-          { text: `「${a}」をおくよ。`, val: a }
+          { text: `まずは「${a}」をおくよ。<br>`, val: 0, isTextOnly: true },
+          { text: ``, val: a }
         ],
         prevVal: 0,
         val: a,
@@ -429,47 +581,43 @@
         hissanHlBottom1: false,
         showResult: false
       });
-      
-      let b10 = Math.floor(b / 10) * 10;
-      let b1 = b % 10;
-      let currentVal = a;
-      
+
       if (b10 > 0) {
-        let b10_digit = Math.floor(b10 / 10);
-        let current_a10_digit = Math.floor((currentVal % 100) / 10);
-        let actions = getAddExplainInfo(current_a10_digit, b10_digit, true, currentVal, 10);
-        let nextVal = currentVal + b10;
-        explainSteps.push({
-          actions: actions,
-          prevVal: currentVal,
-          val: nextVal,
-          hissanHlTop: false,
-          hissanHlBottom10: true,
-          hissanHlBottom1: false,
-          showResult: false
-        });
-        currentVal = nextVal;
+        let a10 = Math.floor(currentVal / 10) % 10;
+        let actions = getAddExplainInfo(a10, b10, true, currentVal, 10);
+        if (actions.length > 0) {
+          explainSteps.push({
+            actions: actions,
+            prevVal: currentVal,
+            val: currentVal + b10 * 10,
+            hissanHlTop: false,
+            hissanHlBottom10: true,
+            hissanHlBottom1: false,
+            showResult: false
+          });
+          currentVal += b10 * 10;
+        }
       }
-      
+
       if (b1 > 0) {
-        let b1_digit = b1;
-        let current_a1_digit = currentVal % 10;
-        let actions = getAddExplainInfo(current_a1_digit, b1_digit, false, currentVal, 1);
-        let nextVal = currentVal + b1;
-        explainSteps.push({
-          actions: actions,
-          prevVal: currentVal,
-          val: nextVal,
-          hissanHlTop: false,
-          hissanHlBottom10: false,
-          hissanHlBottom1: true,
-          showResult: false
-        });
-        currentVal = nextVal;
+        let a1 = currentVal % 10;
+        let actions = getAddExplainInfo(a1, b1, false, currentVal, 1);
+        if (actions.length > 0) {
+          explainSteps.push({
+            actions: actions,
+            prevVal: currentVal,
+            val: currentVal + b1,
+            hissanHlTop: false,
+            hissanHlBottom10: false,
+            hissanHlBottom1: true,
+            showResult: false
+          });
+          currentVal += b1;
+        }
       }
-      
+
       explainSteps.push({
-        text: `<div class="text-3xl mt-2">こたえは「<span class="text-5xl text-red-500 mx-1 font-black">${a + b}</span>」だよ。</div>`,
+        text: `<div class="text-xl leading-tight">こたえは<span class="text-4xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${a + b}</span>だよ。</div>`,
         prevVal: currentVal,
         val: a + b,
         hissanHlTop: false,
@@ -479,12 +627,39 @@
       });
     }
 
-    // 解説開始
+    function buildIntroSteps(num) {
+      explainSteps = [];
+      let text = "";
+      if (num < 5) {
+        text = `一のくらいに「${num}」をおくよ。`;
+      } else if (num === 5) {
+        text = `五だまをさげて、「5」をおくよ。`;
+      } else {
+        text = `5と${num-5}で、「${num}」をおくよ。`;
+      }
+
+      explainSteps.push({
+        actions: [
+          { text: text, val: num }
+        ],
+        prevVal: 0,
+        val: num,
+        showResult: false 
+      });
+      
+      explainSteps.push({
+        text: `<div class="text-xl leading-tight">これが<span class="text-4xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${num}</span>だよ。</div>`,
+        prevVal: num,
+        val: num,
+        showResult: true
+      });
+    }
+
     function startExplain() {
       document.getElementById('initialButtons').classList.add('hidden');
       document.getElementById('explainBox').classList.remove('hidden');
       isInteractive = false; 
-      currentAnimSpeed = 0.2; 
+      currentAnimSpeed = 0.12; 
       
       setSorobanValueInstantly(0);
       currentStep = 0;
@@ -494,21 +669,28 @@
     function playStep() {
       let step = explainSteps[currentStep];
       
-      // 筆算ハイライト
-      document.getElementById('hTop10').classList.toggle('hissan-active', step.hissanHlTop);
-      document.getElementById('hTop1').classList.toggle('hissan-active', step.hissanHlTop);
-      document.getElementById('hBot10').classList.toggle('hissan-active', step.hissanHlBottom10);
-      document.getElementById('hBot1').classList.toggle('hissan-active', step.hissanHlBottom1);
+      if (mode !== 'intro') {
+        document.getElementById('hTop10').classList.toggle('hissan-active', !!step.hissanHlTop);
+        document.getElementById('hTop1').classList.toggle('hissan-active', !!step.hissanHlTop);
+        document.getElementById('hBot10').classList.toggle('hissan-active', !!step.hissanHlBottom10);
+        document.getElementById('hBot1').classList.toggle('hissan-active', !!step.hissanHlBottom1);
+      }
       
       if (step.showResult) {
-        setAnswerText();
-        document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ${step.val}`;
-        document.getElementById('hResCont').classList.remove('opacity-0');
-        document.getElementById('hResCont').classList.add('opacity-100');
+        if (mode !== 'intro') {
+          setAnswerText();
+          document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ${step.val}`;
+          document.getElementById('hResCont').classList.remove('opacity-0');
+          document.getElementById('hResCont').classList.add('opacity-100');
+        } else {
+          document.getElementById('questionTitle').innerText = `すうじのおきかた`;
+        }
         document.getElementById('explainButtons').classList.add('hidden');
         document.getElementById('nextQuestionBtn').classList.remove('hidden');
       } else {
-        document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ？`;
+        if (mode !== 'intro') {
+          document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ？`;
+        }
         document.getElementById('explainButtons').classList.remove('hidden');
         document.getElementById('nextStepBtn').innerText = (currentStep === explainSteps.length - 2) ? "こたえをみる" : "つぎへ";
       }
@@ -532,18 +714,31 @@
     }
 
     function showAnswerInstantly() {
-      setAnswerText();
+      document.getElementById('explainBox').classList.remove('hidden');
+
+      if (mode !== 'intro') {
+        setAnswerText();
+        document.getElementById('hResCont').classList.remove('opacity-0');
+        document.getElementById('hResCont').classList.add('opacity-100');
+        document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ${qA + qB}`;
+        document.getElementById('sorobanMessage').innerHTML = `<div class="text-xl leading-tight">こたえは<span class="text-4xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${qA + qB}</span>だよ。</div>`;
+      } else {
+        document.getElementById('sorobanMessage').innerHTML = `<div class="text-xl leading-tight">これが<span class="text-4xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${qA}</span>だよ。</div>`;
+      }
+      
       document.getElementById('initialButtons').classList.add('hidden');
       document.getElementById('nextQuestionBtn').classList.remove('hidden');
-      document.getElementById('hResCont').classList.remove('opacity-0');
-      document.getElementById('hResCont').classList.add('opacity-100');
-      document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ${qA + qB}`;
       
       isInteractive = false;
       clearAnimationQueue();
-      currentAnimSpeed = 0.2;
-      setSorobanValueAnimatedTarget(qA + qB, () => {
-        resetBeadsColor();
+      currentAnimSpeed = 0.12;
+      
+      let targetVal = (mode === 'intro') ? qA : (qA + qB);
+      
+      setSorobanValueAnimatedTarget(targetVal, () => {
+        playSuccessMelody();
+        highlightResultBeads();
+        resetColorTimeoutId = setTimeout(resetBeadsColor, 1500);
       });
     }
 
@@ -553,6 +748,10 @@
       if (sequenceTimeoutId) {
         clearTimeout(sequenceTimeoutId);
         sequenceTimeoutId = null;
+      }
+      if (resetColorTimeoutId) {
+        clearTimeout(resetColorTimeoutId);
+        resetColorTimeoutId = null;
       }
       if (animationId) {
         cancelAnimationFrame(animationId);
@@ -570,7 +769,9 @@
       if (step.showResult) {
         document.getElementById('sorobanMessage').innerHTML = step.text;
         setSorobanValueAnimatedTarget(step.val, () => {
-          setTimeout(resetBeadsColor, 500);
+          playSuccessMelody();
+          highlightResultBeads();
+          resetColorTimeoutId = setTimeout(resetBeadsColor, 1500);
         });
         return;
       }
@@ -578,14 +779,6 @@
       currentAnimStep = step;
       currentActionIndex = 0;
       playNextInSequence();
-    }
-
-    function resetBeadsColor() {
-      columns.forEach(col => {
-        beadState[col.id].bead5.color = 'normal';
-        beadState[col.id].beads1.forEach(b => b.color = 'normal');
-      });
-      renderSoroban();
     }
 
     function updateExplainText(step, activeIndex) {
@@ -596,7 +789,22 @@
       
       let html = "";
       step.actions.forEach((act, idx) => {
+        if (!act.text || act.text.trim() === "") return;
+
+        let isHighlighted = false;
         if (idx === activeIndex) {
+          isHighlighted = true;
+        } else if (activeIndex >= 0 && (!step.actions[activeIndex].text || step.actions[activeIndex].text.trim() === "")) {
+          let lastTextIdx = activeIndex;
+          while (lastTextIdx >= 0 && (!step.actions[lastTextIdx].text || step.actions[lastTextIdx].text.trim() === "")) {
+             lastTextIdx--;
+          }
+          if (idx === lastTextIdx) {
+             isHighlighted = true;
+          }
+        }
+
+        if (isHighlighted) {
           html += `<span class="text-red-600 font-bold bg-yellow-100 px-1 rounded transition-colors duration-300">${act.text}</span>`;
         } else {
           html += `<span class="transition-colors duration-300 text-gray-700">${act.text}</span>`;
@@ -617,7 +825,6 @@
       updateExplainText(currentAnimStep, currentActionIndex);
       let nextAction = currentAnimStep.actions[currentActionIndex];
 
-      // ゴーストアニメーション（置こうとする動き）のセットアップ
       if (nextAction.ghost) {
         ghostState = {
           active: true,
@@ -631,32 +838,52 @@
       }
 
       if (nextAction.isTextOnly) {
-        // 文字を読むだけのタメ
         sequenceTimeoutId = setTimeout(() => {
           currentActionIndex++;
           playNextInSequence();
-        }, 1000); // 1秒間赤字にしてストップ
+        }, 1000); 
       } else {
-        // 珠を動かす
         setSorobanValueAnimatedTarget(nextAction.val, () => {
           currentActionIndex++;
           if (currentActionIndex < currentAnimStep.actions.length) {
             sequenceTimeoutId = setTimeout(() => {
               playNextInSequence();
-            }, 800); // 次の動きまで少し待つ
+            }, 500); 
           } else {
             sequenceTimeoutId = setTimeout(() => {
               updateExplainText(currentAnimStep, -1);
               resetBeadsColor();
-            }, 800); 
+            }, 500); 
           }
         });
       }
     }
 
-    // 珠の座標を定義（厚みアップ対応）
+    function highlightResultBeads() {
+      activeColumns.forEach(col => {
+        let state = beadState[col.id];
+        let val = col.value;
+        if (val >= 5) {
+          state.bead5.color = 'add';
+        }
+        for (let i = 0; i < (val % 5); i++) {
+          state.beads1[i].color = 'add';
+        }
+      });
+      renderSoroban();
+    }
+
+    function resetBeadsColor() {
+      activeColumns.forEach(col => {
+        beadState[col.id].bead5.color = 'normal';
+        beadState[col.id].beads1.forEach(b => b.color = 'normal');
+      });
+      renderSoroban();
+    }
+
     function initSoroban() {
-      columns.forEach(col => {
+      beadState = {};
+      activeColumns.forEach(col => {
         beadState[col.id] = {
           bead5: { y: 24, targetY: 24, color: 'normal' },
           beads1: [
@@ -670,7 +897,6 @@
       renderSoroban();
     }
 
-    // 共通の描画処理
     function renderSoroban() {
       drawSorobanFrame();
       drawAllBeads();
@@ -680,31 +906,30 @@
     function drawSorobanFrame() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // 枠
       ctx.fillStyle = "#8B4513";
       ctx.fillRect(0, 0, canvas.width, 10);
       ctx.fillRect(0, canvas.height - 10, canvas.width, 10);
       ctx.fillRect(0, 0, 10, canvas.height);
       ctx.fillRect(canvas.width - 10, 0, 10, canvas.height);
       
-      // 梁
       ctx.fillRect(0, 60, canvas.width, 6);
       
-      // 定位点
       ctx.fillStyle = "#000";
       ctx.beginPath();
-      ctx.arc(columns[2].x, 63, 3, 0, Math.PI * 2);
-      ctx.fill();
+      let onesCol = activeColumns.find(c => c.id === '1s');
+      if (onesCol) {
+        ctx.arc(onesCol.x, 63, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
-      // 軸
       ctx.fillStyle = "#A0522D";
-      columns.forEach(col => {
+      activeColumns.forEach(col => {
         ctx.fillRect(col.x - 2, 10, 4, canvas.height - 20);
       });
     }
 
     function drawAllBeads() {
-      columns.forEach(col => {
+      activeColumns.forEach(col => {
         let state = beadState[col.id];
         drawBead(col.x, state.bead5.y, state.bead5.color);
         state.beads1.forEach(b => {
@@ -715,17 +940,16 @@
 
     function drawBead(x, y, colorType = 'normal') {
       ctx.beginPath();
-      // 立体感を持たせるため縦半径を14に拡大（厚み）
       ctx.ellipse(x, y, 24, 14, 0, 0, Math.PI * 2);
       
       if (colorType === 'add') {
-        ctx.fillStyle = "#ef4444"; // 赤
+        ctx.fillStyle = "#ef4444"; 
       } else if (colorType === 'sub') {
-        ctx.fillStyle = "#3b82f6"; // 青
+        ctx.fillStyle = "#3b82f6"; 
       } else if (colorType === 'ghost') {
-        ctx.fillStyle = "#9ca3af"; // 灰色（ゴースト）
+        ctx.fillStyle = "#9ca3af"; 
       } else {
-        ctx.fillStyle = "#f59e0b"; // 木の色
+        ctx.fillStyle = "#f59e0b"; 
       }
       
       ctx.fill();
@@ -733,18 +957,16 @@
       ctx.strokeStyle = (colorType === 'ghost') ? "#6b7280" : "#b45309";
       ctx.stroke();
       
-      // 立体感のハイライト
       ctx.beginPath();
       ctx.ellipse(x, y - 4, 16, 6, 0, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
       ctx.fill();
     }
 
-    // ❌マークを描く関数
     function drawCrossMark(x, y) {
       ctx.save();
-      ctx.globalAlpha = 1.0; // 不透明
-      ctx.strokeStyle = "#dc2626"; // 赤色
+      ctx.globalAlpha = 1.0; 
+      ctx.strokeStyle = "#dc2626"; 
       ctx.lineWidth = 4;
       ctx.lineCap = "round";
       ctx.beginPath();
@@ -756,17 +978,17 @@
       ctx.restore();
     }
 
-    // ゴースト（半透明の置こうとする動き）の描画
     function drawGhostBeads() {
       if (!ghostState.active) return;
-      let col = columns[ghostState.colIndex];
+      if (ghostState.colIndex >= activeColumns.length) return;
+
+      let col = activeColumns[ghostState.colIndex];
       let v = ghostState.val;
       let has5 = v >= 5;
       let n1 = v % 5;
 
-      ctx.globalAlpha = 0.6; // 半透明
+      ctx.globalAlpha = 0.6; 
 
-      // イージング
       let p = ghostState.progress;
       let ease = p * (2 - p); 
 
@@ -791,9 +1013,9 @@
 
     function setSorobanValueInstantly(val) {
       clearAnimationQueue();
-      let str = String(val).padStart(3, '0');
+      let str = String(val).padStart(activeColumns.length, '0');
       
-      columns.forEach((col, index) => {
+      activeColumns.forEach((col, index) => {
         let colVal = parseInt(str[index]);
         col.value = colVal;
         let state = beadState[col.id];
@@ -815,10 +1037,10 @@
     }
 
     function setSorobanValueAnimatedTarget(val, cb) {
-      let str = String(val).padStart(3, '0');
+      let str = String(val).padStart(activeColumns.length, '0');
       let changed = false;
 
-      columns.forEach((col, index) => {
+      activeColumns.forEach((col, index) => {
         let colVal = parseInt(str[index]);
         col.value = colVal; 
         let state = beadState[col.id];
@@ -847,10 +1069,11 @@
       });
 
       if (changed) {
+        playBeadSound();
         onAnimationComplete = cb;
         if (!animationId) animateSoroban();
       } else {
-        columns.forEach(col => {
+        activeColumns.forEach(col => {
           beadState[col.id].bead5.color = 'normal';
           beadState[col.id].beads1.forEach(b => b.color = 'normal');
         });
@@ -859,14 +1082,13 @@
       }
     }
 
-    // ゴースト用のアニメーションループ
     function animateGhost() {
       if (!ghostState.active) {
         ghostAnimationId = null;
         return;
       }
       
-      ghostState.progress += 0.08; 
+      ghostState.progress += 0.12; 
       if (ghostState.progress > 1) ghostState.progress = 1;
 
       renderSoroban();
@@ -878,12 +1100,11 @@
       }
     }
 
-    // 実際の珠のアニメーションループ
     function animateSoroban() {
       let isMoving = false;
       const speed = currentAnimSpeed;
 
-      columns.forEach(col => {
+      activeColumns.forEach(col => {
         let state = beadState[col.id];
         if (Math.abs(state.bead5.targetY - state.bead5.y) > 0.5) {
           state.bead5.y += (state.bead5.targetY - state.bead5.y) * speed;
@@ -916,7 +1137,6 @@
       }
     }
 
-    // ユーザー操作
     canvas.addEventListener('pointerdown', (e) => {
       if (!isInteractive) return; 
       
@@ -926,20 +1146,22 @@
       const x = (e.clientX - rect.left) * scaleX;
       const y = (e.clientY - rect.top) * scaleY;
 
-      columns.forEach(col => {
+      activeColumns.forEach(col => {
         if (Math.abs(x - col.x) < 30) {
           let state = beadState[col.id];
+          let isChanged = false;
           
           if (y > 10 && y < 60) {
             let isPlaced = (state.bead5.targetY === 46);
             state.bead5.targetY = isPlaced ? 24 : 46;
             col.value = isPlaced ? col.value - 5 : col.value + 5;
+            isChanged = true;
           }
           
           if (y > 65 && y < 190) {
             let clickedIndex = -1;
             for(let i=0; i<4; i++){
-               if(Math.abs(y - state.beads1[i].y) < 25) { // 厚みが増したので当たり判定を少し広く
+               if(Math.abs(y - state.beads1[i].y) < 25) { 
                    clickedIndex = i;
                    break;
                }
@@ -956,6 +1178,7 @@
                 for (let i = 0; i <= clickedIndex; i++) {
                    state.beads1[i].targetY = 80 + i * 28;
                 }
+                isChanged = true;
               } else {
                 let current1s = col.value % 5;
                 let subAmount = current1s - clickedIndex;
@@ -963,8 +1186,13 @@
                 for (let i = clickedIndex; i < 4; i++) {
                    state.beads1[i].targetY = 176 - (3 - i) * 28;
                 }
+                isChanged = true;
               }
             }
+          }
+          
+          if (isChanged) {
+            playBeadSound();
           }
         }
       });
@@ -973,7 +1201,12 @@
     });
 
     window.onload = function() {
-      initSoroban();
+      setupCanvasForMode();
+      
+      const isLarge = localStorage.getItem('largeSoroban') === 'true';
+      const checkbox = document.getElementById('largeSorobanCheck');
+      checkbox.checked = isLarge;
+      toggleLargeSoroban(isLarge);
     };
 
   </script>
