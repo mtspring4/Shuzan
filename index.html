@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>そろばん たしざん</title>
+  <!-- ブラウザのタブにそろばんの絵文字アイコンを表示 -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%%22 y=%2250%%22 style=%22dominant-baseline:central;text-anchor:middle;font-size:80px;%22>🧮</text></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
@@ -82,25 +84,25 @@
       </span>
     </div>
 
-    <h1 class="text-3xl font-bold text-green-600 mb-6 text-center leading-tight">そろばん たしざん<br>れんしゅう</h1>
+    <h1 class="text-3xl font-bold text-green-600 mb-2 text-center leading-tight">そろばん たしざん<br>れんしゅう</h1>
     
     <p class="text-sm font-bold text-gray-600 mb-8 text-center">そろばんがある子は、そろばんをよういしてね</p>
 
     <div class="w-full space-y-4">
       <button onclick="startGame('intro')" class="w-full py-3 bg-pink-400 text-white rounded-2xl shadow-lg border-b-4 border-pink-600 flex flex-col items-center">
-        <span class="text-xs font-bold text-pink-100 bg-pink-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル 1</span>
+        <span class="text-sm tracking-widest font-bold text-pink-100 bg-pink-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル：⭐️</span>
         <span class="text-xl font-bold">すうじのおきかた</span>
       </button>
       <button onclick="startGame('1digit')" class="w-full py-3 bg-blue-400 text-white rounded-2xl shadow-lg border-b-4 border-blue-600 flex flex-col items-center">
-        <span class="text-xs font-bold text-blue-100 bg-blue-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル 2</span>
+        <span class="text-sm tracking-widest font-bold text-blue-100 bg-blue-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル：⭐️⭐️</span>
         <span class="text-xl font-bold">1けた ＋ 1けた</span>
       </button>
       <button onclick="startGame('2digit1')" class="w-full py-3 bg-green-400 text-white rounded-2xl shadow-lg border-b-4 border-green-600 flex flex-col items-center">
-        <span class="text-xs font-bold text-green-100 bg-green-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル 3</span>
+        <span class="text-sm tracking-widest font-bold text-green-100 bg-green-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル：⭐️⭐️⭐️</span>
         <span class="text-xl font-bold">2けた ＋ 1けた</span>
       </button>
       <button onclick="startGame('2digit2')" class="w-full py-3 bg-purple-400 text-white rounded-2xl shadow-lg border-b-4 border-purple-600 flex flex-col items-center">
-        <span class="text-xs font-bold text-purple-100 bg-purple-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル 4</span>
+        <span class="text-sm tracking-widest font-bold text-purple-100 bg-purple-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル：⭐️⭐️⭐️⭐️</span>
         <span class="text-xl font-bold">2けた ＋ 2けた</span>
       </button>
     </div>
@@ -154,7 +156,7 @@
 
     <!-- introモード用メッセージエリア -->
     <div id="introMessageArea" class="hidden bg-white py-6 px-4 rounded-xl shadow-md w-64 mx-auto mb-4 text-2xl font-bold text-gray-800 tracking-widest text-center border-4 border-pink-100">
-      「<span id="introTargetNum" class="text-pink-600 mx-1 text-5xl font-black"></span>」を<br>おこう
+      「<span id="introTargetNum" class="text-pink-600 mx-1 text-5xl font-black"></span>」をおこう
     </div>
 
     <!-- 解説メッセージエリア -->
@@ -319,7 +321,7 @@
       if (isAudioInitialized && melodySynth) {
         const now = Tone.now();
         melodySynth.triggerAttackRelease("C6", "16n", now);
-        melodySynth.triggerAttackRelease("E6", "8n", now + 0.1);
+        melodySynth.triggerAttackRelease("G6", "16n", now + 0.15);
       }
     }
 
@@ -620,7 +622,7 @@
       }
 
       explainSteps.push({
-        text: `<div class="text-xl leading-tight">こたえは<span class="text-3xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${a + b}</span>だよ。</div>`,
+        text: `こたえは「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1">${a + b}</span>」だよ。`,
         prevVal: currentVal,
         val: a + b,
         hissanHlTop: false,
@@ -651,7 +653,7 @@
       });
       
       explainSteps.push({
-        text: `<div class="text-xl leading-tight">これが<span class="text-3xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${num}</span>だよ。</div>`,
+        text: `これが「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1">${num}</span>」だよ。`,
         prevVal: num,
         val: num,
         showResult: true
@@ -724,9 +726,9 @@
         document.getElementById('hResCont').classList.remove('opacity-0');
         document.getElementById('hResCont').classList.add('opacity-100');
         document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ${qA + qB}`;
-        document.getElementById('sorobanMessage').innerHTML = `<div class="text-xl leading-tight">こたえは<span class="text-3xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${qA + qB}</span>だよ。</div>`;
+        document.getElementById('sorobanMessage').innerHTML = `こたえは「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1">${qA + qB}</span>」だよ。`;
       } else {
-        document.getElementById('sorobanMessage').innerHTML = `<div class="text-xl leading-tight">これが<span class="text-3xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${qA}</span>だよ。</div>`;
+        document.getElementById('sorobanMessage').innerHTML = `これが「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1">${qA}</span>」だよ。`;
       }
       
       document.getElementById('initialButtons').classList.add('hidden');
@@ -890,10 +892,10 @@
         beadState[col.id] = {
           bead5: { y: 24, targetY: 24, color: 'normal' },
           beads1: [
-            { y: 92, targetY: 92, color: 'normal' },
-            { y: 120, targetY: 120, color: 'normal' },
-            { y: 148, targetY: 148, color: 'normal' },
-            { y: 176, targetY: 176, color: 'normal' }
+            { y: 88, targetY: 88, color: 'normal' },
+            { y: 112, targetY: 112, color: 'normal' },
+            { y: 136, targetY: 136, color: 'normal' },
+            { y: 160, targetY: 160, color: 'normal' }
           ]
         };
       });
@@ -943,7 +945,8 @@
 
     function drawBead(x, y, colorType = 'normal') {
       ctx.beginPath();
-      ctx.ellipse(x, y, 24, 14, 0, 0, Math.PI * 2);
+      
+      ctx.ellipse(x, y, 26, 16, 0, 0, Math.PI * 2);
       
       if (colorType === 'add') {
         ctx.fillStyle = "#ef4444"; 
@@ -961,8 +964,8 @@
       ctx.stroke();
       
       ctx.beginPath();
-      ctx.ellipse(x, y - 4, 16, 6, 0, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.ellipse(x, y - 4, 18, 6, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
       ctx.fill();
     }
 
@@ -970,13 +973,13 @@
       ctx.save();
       ctx.globalAlpha = 1.0; 
       ctx.strokeStyle = "#dc2626"; 
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 5;
       ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(x - 10, y - 8);
-      ctx.lineTo(x + 10, y + 8);
-      ctx.moveTo(x + 10, y - 8);
-      ctx.lineTo(x - 10, y + 8);
+      ctx.moveTo(x - 12, y - 10);
+      ctx.lineTo(x + 12, y + 10);
+      ctx.moveTo(x + 12, y - 10);
+      ctx.lineTo(x - 12, y + 10);
       ctx.stroke();
       ctx.restore();
     }
@@ -990,22 +993,22 @@
       let has5 = v >= 5;
       let n1 = v % 5;
 
-      ctx.globalAlpha = 0.6; 
+      ctx.globalAlpha = 0.7; 
 
       let p = ghostState.progress;
       let ease = p * (2 - p); 
 
       if (has5) {
         let startY = 24; 
-        let endY = 46;   
+        let endY = 44;   
         let y = startY + (endY - startY) * ease;
         drawBead(col.x, y, 'ghost');
         if (p >= 1) drawCrossMark(col.x, y);
       }
 
       for (let i = 0; i < n1; i++) {
-        let startY = 92 + i * 28; 
-        let endY = 80 + i * 28;    
+        let startY = 88 + i * 24; 
+        let endY = 78 + i * 24;    
         let y = startY + (endY - startY) * ease;
         drawBead(col.x, y, 'ghost');
         if (p >= 1) drawCrossMark(col.x, y); 
@@ -1025,12 +1028,12 @@
         let hasFive = colVal >= 5;
         let n = colVal % 5;
         
-        state.bead5.y = hasFive ? 46 : 24;
+        state.bead5.y = hasFive ? 44 : 24;
         state.bead5.targetY = state.bead5.y;
         state.bead5.color = 'normal';
         
         for (let i = 0; i < 4; i++) {
-          let target1 = (i < n) ? (80 + i * 28) : (176 - (3 - i) * 28);
+          let target1 = (i < n) ? (78 + i * 24) : (160 - (3 - i) * 24);
           state.beads1[i].y = target1;
           state.beads1[i].targetY = target1;
           state.beads1[i].color = 'normal';
@@ -1050,9 +1053,9 @@
         let hasFive = colVal >= 5;
         let n = colVal % 5;
         
-        let target5 = hasFive ? 46 : 24;
+        let target5 = hasFive ? 44 : 24;
         if (state.bead5.targetY !== target5) {
-          state.bead5.color = (target5 === 46) ? 'add' : 'sub';
+          state.bead5.color = (target5 === 44) ? 'add' : 'sub';
           state.bead5.targetY = target5;
           changed = true;
         } else {
@@ -1060,7 +1063,7 @@
         }
         
         for (let i = 0; i < 4; i++) {
-          let target1 = (i < n) ? (80 + i * 28) : (176 - (3 - i) * 28);
+          let target1 = (i < n) ? (78 + i * 24) : (160 - (3 - i) * 24);
           if (state.beads1[i].targetY !== target1) {
             state.beads1[i].color = (target1 < state.beads1[i].targetY) ? 'add' : 'sub'; 
             state.beads1[i].targetY = target1;
@@ -1091,7 +1094,7 @@
         return;
       }
       
-      ghostState.progress += 0.12; 
+      ghostState.progress += 0.16; 
       if (ghostState.progress > 1) ghostState.progress = 1;
 
       renderSoroban();
@@ -1155,8 +1158,8 @@
           let isChanged = false;
           
           if (y > 10 && y < 60) {
-            let isPlaced = (state.bead5.targetY === 46);
-            state.bead5.targetY = isPlaced ? 24 : 46;
+            let isPlaced = (state.bead5.targetY === 44);
+            state.bead5.targetY = isPlaced ? 24 : 44;
             col.value = isPlaced ? col.value - 5 : col.value + 5;
             isChanged = true;
           }
@@ -1164,7 +1167,7 @@
           if (y > 65 && y < 190) {
             let clickedIndex = -1;
             for(let i=0; i<4; i++){
-               if(Math.abs(y - state.beads1[i].y) < 25) { 
+               if(Math.abs(y - state.beads1[i].y) < 20) { 
                    clickedIndex = i;
                    break;
                }
@@ -1172,14 +1175,14 @@
 
             if (clickedIndex !== -1) {
               let b = state.beads1[clickedIndex];
-              let isPlaced = b.targetY === (80 + clickedIndex * 28);
+              let isPlaced = b.targetY === (78 + clickedIndex * 24);
 
               if (!isPlaced) {
                 let current1s = col.value % 5;
                 let addAmount = (clickedIndex + 1) - current1s;
                 col.value += addAmount;
                 for (let i = 0; i <= clickedIndex; i++) {
-                   state.beads1[i].targetY = 80 + i * 28;
+                   state.beads1[i].targetY = 78 + i * 24;
                 }
                 isChanged = true;
               } else {
@@ -1187,7 +1190,7 @@
                 let subAmount = current1s - clickedIndex;
                 col.value -= subAmount;
                 for (let i = clickedIndex; i < 4; i++) {
-                   state.beads1[i].targetY = 176 - (3 - i) * 28;
+                   state.beads1[i].targetY = 160 - (3 - i) * 24;
                 }
                 isChanged = true;
               }
