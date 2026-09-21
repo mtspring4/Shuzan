@@ -87,17 +87,21 @@
     <p class="text-sm font-bold text-gray-600 mb-8 text-center">そろばんがある子は、そろばんをよういしてね</p>
 
     <div class="w-full space-y-4">
-      <button onclick="startGame('intro')" class="w-full py-4 bg-pink-400 text-white text-xl font-bold rounded-2xl shadow-lg border-b-4 border-pink-600">
-        すうじのおきかた
+      <button onclick="startGame('intro')" class="w-full py-3 bg-pink-400 text-white rounded-2xl shadow-lg border-b-4 border-pink-600 flex flex-col items-center">
+        <span class="text-xs font-bold text-pink-100 bg-pink-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル 1</span>
+        <span class="text-xl font-bold">すうじのおきかた</span>
       </button>
-      <button onclick="startGame('1digit')" class="w-full py-4 bg-blue-400 text-white text-xl font-bold rounded-2xl shadow-lg border-b-4 border-blue-600">
-        1けた ＋ 1けた
+      <button onclick="startGame('1digit')" class="w-full py-3 bg-blue-400 text-white rounded-2xl shadow-lg border-b-4 border-blue-600 flex flex-col items-center">
+        <span class="text-xs font-bold text-blue-100 bg-blue-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル 2</span>
+        <span class="text-xl font-bold">1けた ＋ 1けた</span>
       </button>
-      <button onclick="startGame('2digit1')" class="w-full py-4 bg-green-400 text-white text-xl font-bold rounded-2xl shadow-lg border-b-4 border-green-600">
-        2けた ＋ 1けた
+      <button onclick="startGame('2digit1')" class="w-full py-3 bg-green-400 text-white rounded-2xl shadow-lg border-b-4 border-green-600 flex flex-col items-center">
+        <span class="text-xs font-bold text-green-100 bg-green-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル 3</span>
+        <span class="text-xl font-bold">2けた ＋ 1けた</span>
       </button>
-      <button onclick="startGame('2digit2')" class="w-full py-4 bg-purple-400 text-white text-xl font-bold rounded-2xl shadow-lg border-b-4 border-purple-600">
-        2けた ＋ 2けた
+      <button onclick="startGame('2digit2')" class="w-full py-3 bg-purple-400 text-white rounded-2xl shadow-lg border-b-4 border-purple-600 flex flex-col items-center">
+        <span class="text-xs font-bold text-purple-100 bg-purple-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル 4</span>
+        <span class="text-xl font-bold">2けた ＋ 2けた</span>
       </button>
     </div>
   </div>
@@ -314,9 +318,8 @@
     function playSuccessMelody() {
       if (isAudioInitialized && melodySynth) {
         const now = Tone.now();
-        melodySynth.triggerAttackRelease("E5", "16n", now);
-        melodySynth.triggerAttackRelease("G5", "16n", now + 0.1);
-        melodySynth.triggerAttackRelease("C6", "4n", now + 0.2);
+        melodySynth.triggerAttackRelease("C6", "16n", now);
+        melodySynth.triggerAttackRelease("E6", "8n", now + 0.1);
       }
     }
 
@@ -617,7 +620,7 @@
       }
 
       explainSteps.push({
-        text: `<div class="text-xl leading-tight">こたえは<span class="text-4xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${a + b}</span>だよ。</div>`,
+        text: `<div class="text-xl leading-tight">こたえは<span class="text-3xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${a + b}</span>だよ。</div>`,
         prevVal: currentVal,
         val: a + b,
         hissanHlTop: false,
@@ -648,7 +651,7 @@
       });
       
       explainSteps.push({
-        text: `<div class="text-xl leading-tight">これが<span class="text-4xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${num}</span>だよ。</div>`,
+        text: `<div class="text-xl leading-tight">これが<span class="text-3xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${num}</span>だよ。</div>`,
         prevVal: num,
         val: num,
         showResult: true
@@ -721,9 +724,9 @@
         document.getElementById('hResCont').classList.remove('opacity-0');
         document.getElementById('hResCont').classList.add('opacity-100');
         document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ${qA + qB}`;
-        document.getElementById('sorobanMessage').innerHTML = `<div class="text-xl leading-tight">こたえは<span class="text-4xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${qA + qB}</span>だよ。</div>`;
+        document.getElementById('sorobanMessage').innerHTML = `<div class="text-xl leading-tight">こたえは<span class="text-3xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${qA + qB}</span>だよ。</div>`;
       } else {
-        document.getElementById('sorobanMessage').innerHTML = `<div class="text-xl leading-tight">これが<span class="text-4xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${qA}</span>だよ。</div>`;
+        document.getElementById('sorobanMessage').innerHTML = `<div class="text-xl leading-tight">これが<span class="text-3xl text-red-500 mx-1 font-black inline-block transform translate-y-1">${qA}</span>だよ。</div>`;
       }
       
       document.getElementById('initialButtons').classList.add('hidden');
