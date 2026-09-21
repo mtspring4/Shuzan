@@ -890,12 +890,12 @@
       beadState = {};
       activeColumns.forEach(col => {
         beadState[col.id] = {
-          bead5: { y: 24, targetY: 24, color: 'normal' },
+          bead5: { y: 22, targetY: 22, color: 'normal' },
           beads1: [
-            { y: 88, targetY: 88, color: 'normal' },
-            { y: 112, targetY: 112, color: 'normal' },
-            { y: 136, targetY: 136, color: 'normal' },
-            { y: 160, targetY: 160, color: 'normal' }
+            { y: 106, targetY: 106, color: 'normal' },
+            { y: 130, targetY: 130, color: 'normal' },
+            { y: 154, targetY: 154, color: 'normal' },
+            { y: 178, targetY: 178, color: 'normal' }
           ]
         };
       });
@@ -946,7 +946,8 @@
     function drawBead(x, y, colorType = 'normal') {
       ctx.beginPath();
       
-      ctx.ellipse(x, y, 26, 16, 0, 0, Math.PI * 2);
+      // 珠の厚み（縦方向の半径）を12に設定し、枠内で重ならない最大サイズに調整
+      ctx.ellipse(x, y, 26, 12, 0, 0, Math.PI * 2);
       
       if (colorType === 'add') {
         ctx.fillStyle = "#ef4444"; 
@@ -964,7 +965,8 @@
       ctx.stroke();
       
       ctx.beginPath();
-      ctx.ellipse(x, y - 4, 18, 6, 0, 0, Math.PI * 2);
+      // 光の反射も珠の形に合わせて微調整
+      ctx.ellipse(x, y - 4, 18, 5, 0, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
       ctx.fill();
     }
@@ -999,15 +1001,15 @@
       let ease = p * (2 - p); 
 
       if (has5) {
-        let startY = 24; 
-        let endY = 44;   
+        let startY = 22; 
+        let endY = 48;   
         let y = startY + (endY - startY) * ease;
         drawBead(col.x, y, 'ghost');
         if (p >= 1) drawCrossMark(col.x, y);
       }
 
       for (let i = 0; i < n1; i++) {
-        let startY = 88 + i * 24; 
+        let startY = 106 + i * 24; 
         let endY = 78 + i * 24;    
         let y = startY + (endY - startY) * ease;
         drawBead(col.x, y, 'ghost');
@@ -1028,12 +1030,13 @@
         let hasFive = colVal >= 5;
         let n = colVal % 5;
         
-        state.bead5.y = hasFive ? 44 : 24;
+        state.bead5.y = hasFive ? 48 : 22;
         state.bead5.targetY = state.bead5.y;
         state.bead5.color = 'normal';
         
         for (let i = 0; i < 4; i++) {
-          let target1 = (i < n) ? (78 + i * 24) : (160 - (3 - i) * 24);
+          // 動かす距離を確保して重ならないように設定
+          let target1 = (i < n) ? (78 + i * 24) : (106 + i * 24);
           state.beads1[i].y = target1;
           state.beads1[i].targetY = target1;
           state.beads1[i].color = 'normal';
@@ -1053,9 +1056,9 @@
         let hasFive = colVal >= 5;
         let n = colVal % 5;
         
-        let target5 = hasFive ? 44 : 24;
+        let target5 = hasFive ? 48 : 22;
         if (state.bead5.targetY !== target5) {
-          state.bead5.color = (target5 === 44) ? 'add' : 'sub';
+          state.bead5.color = (target5 === 48) ? 'add' : 'sub';
           state.bead5.targetY = target5;
           changed = true;
         } else {
@@ -1063,7 +1066,7 @@
         }
         
         for (let i = 0; i < 4; i++) {
-          let target1 = (i < n) ? (78 + i * 24) : (160 - (3 - i) * 24);
+          let target1 = (i < n) ? (78 + i * 24) : (106 + i * 24);
           if (state.beads1[i].targetY !== target1) {
             state.beads1[i].color = (target1 < state.beads1[i].targetY) ? 'add' : 'sub'; 
             state.beads1[i].targetY = target1;
@@ -1158,8 +1161,8 @@
           let isChanged = false;
           
           if (y > 10 && y < 60) {
-            let isPlaced = (state.bead5.targetY === 44);
-            state.bead5.targetY = isPlaced ? 24 : 44;
+            let isPlaced = (state.bead5.targetY === 48);
+            state.bead5.targetY = isPlaced ? 22 : 48;
             col.value = isPlaced ? col.value - 5 : col.value + 5;
             isChanged = true;
           }
@@ -1190,7 +1193,7 @@
                 let subAmount = current1s - clickedIndex;
                 col.value -= subAmount;
                 for (let i = clickedIndex; i < 4; i++) {
-                   state.beads1[i].targetY = 160 - (3 - i) * 24;
+                   state.beads1[i].targetY = 106 + i * 24;
                 }
                 isChanged = true;
               }
