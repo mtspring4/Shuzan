@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>そろばん たしざん</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      background-color: #f0fdf4;
+      touch-action: manipulation;
+    }
+    .soroban-container {
+      background-color: #d97706; /* 木枠の色 */
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    canvas {
+      background-color: #fef3c7; /* そろばんの背景色 */
+      border-radius: 8px;
+      display: block;
+      margin: 0 auto;
+      touch-action: none;
+    }
+    /* 筆算のハイライト用 */
+    .hissan-active {
+      background-color: #fef08a; /* 黄色背景 */
+      border-radius: 4px;
+      color: #dc2626; /* 赤文字 */
+    }
+    button {
+      transition: transform 0.1s;
+    }
+    button:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body class="text-gray-800 h-screen flex flex-col items-center">
+
+  <div id="homeScreen" class="flex flex-col items-center justify-center w-full h-full max-w-md p-4">
+    <h1 class="text-3xl font-bold text-green-600 mb-8 text-center">そろばん たしざん<br>れんしゅう</h1>
+    
+    <div class="w-full space-y-4">
+      <button onclick="startGame('1digit')" class="w-full py-4 bg-blue-400 text-white text-xl font-bold rounded-2xl shadow-lg border-b-4 border-blue-600">
+        1けた ＋ 1けた
+      </button>
+      <button onclick="startGame('2digit1')" class="w-full py-4 bg-green-400 text-white text-xl font-bold rounded-2xl shadow-lg border-b-4 border-green-600">
+        2けた ＋ 1けた
+      </button>
+      <button onclick="startGame('2digit2')" class="w-full py-4 bg-purple-400 text-white text-xl font-bold rounded-2xl shadow-lg border-b-4 border-purple-600">
+        2けた ＋ 2けた
+      </button>
+    </div>
+  </div>
+
+  <div id="gameScreen" class="hidden flex-col items-center w-full h-full max-w-md p-4 overflow-y-auto">
+    <!-- ヘッダーと問題 -->
+    <div class="w-full flex justify-between items-center mb-2">
+      <button onclick="backToHome()" class="px-4 py-2 bg-gray-200 rounded-full text-sm font-bold shadow">もどる</button>
+      <h2 id="questionTitle" class="text-2xl font-bold text-gray-700">？ ＋ ？ ＝ ？</h2>
+      <div class="w-16"></div> <!-- バランス用 -->
+    </div>
+
+    <!-- 筆算エリア -->
+    <div class="bg-white p-4 rounded-xl shadow-md w-48 flex justify-center mb-4 text-3xl font-bold tracking-widest relative mx-auto">
+      <div class="flex flex-col items-end font-mono">
+        <!-- 上の数字 -->
+        <div class="grid grid-cols-2 gap-2 w-16 mb-1 text-right">
+          <div id="hTop10" class="text-center rounded transition-colors duration-300"></div>
+          <div id="hTop1" class="text-center rounded transition-colors duration-300"></div>
+        </div>
+        <!-- 下の数字 -->
+        <div class="flex items-center w-full">
+          <div class="text-2xl mr-2">＋</div>
+          <div class="grid grid-cols-2 gap-2 w-16 text-right">
+            <div id="hBot10" class="text-center rounded transition-colors duration-300"></div>
+            <div id="hBot1" class="text-center rounded transition-colors duration-300"></div>
+          </div>
+        </div>
+        <!-- 横線 -->
+        <div class="w-full h-1 bg-gray-800 my-2"></div>
+        <!-- こたえ -->
+        <div id="hResCont" class="flex justify-end w-full text-red-500 opacity-0 transition-opacity duration-300">
+          <div class="grid grid-cols-3 gap-1 w-24 text-right">
+            <div id="hRes100" class="text-center"></div>
+            <div id="hRes10" class="text-center"></div>
+            <div id="hRes1" class="text-center"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 解説メッセージエリア -->
+    <div id="explainBox" class="hidden w-full bg-blue-50 border-4 border-blue-200 p-4 rounded-xl shadow-sm mb-4 min-h-[7rem] flex items-center justify-center relative">
+      <div id="sorobanMessage" class="text-lg text-center font-bold text-gray-700 leading-relaxed w-full">
+        かいせつ を みてね！
+      </div>
+    </div>
+
+    <!-- そろばんエリア -->
+    <div class="w-full mb-4 relative flex justify-center">
+      <div class="soroban-container">
+        <!-- 桁の表示（漢字） -->
+        <div class="w-[240px] mx-auto grid grid-cols-3 text-center font-bold text-[#8B4513] mb-1 text-sm tracking-widest">
+          <div>百</div>
+          <div>十</div>
+          <div>一</div>
+        </div>
+        <!-- 幅240, 高さ200で3桁を表示 -->
+        <canvas id="sorobanCanvas" width="240" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- 操作ボタンエリア -->
+    <div id="initialButtons" class="w-full flex space-x-4 mb-4">
+      <button onclick="startExplain()" class="flex-1 py-3 bg-yellow-400 text-yellow-900 text-lg font-bold rounded-xl shadow-md border-b-4 border-yellow-600">
+        かいせつをみる
+      </button>
+      <button onclick="showAnswerInstantly()" class="flex-1 py-3 bg-red-400 text-white text-lg font-bold rounded-xl shadow-md border-b-4 border-red-600">
+        こたえあわせ
+      </button>
+    </div>
+
+    <!-- 解説中の操作ボタン -->
+    <div id="explainButtons" class="hidden w-full flex space-x-4 mb-4">
+      <button onclick="replayCurrentStep()" class="flex-1 py-3 bg-gray-300 text-gray-700 text-lg font-bold rounded-xl shadow-md border-b-4 border-gray-500">
+        もういちど
+      </button>
+      <button id="nextStepBtn" onclick="nextExplainStep()" class="flex-1 py-3 bg-blue-500 text-white text-lg font-bold rounded-xl shadow-md border-b-4 border-blue-700">
+        つぎへ
+      </button>
+    </div>
+
+    <button id="nextQuestionBtn" onclick="generateQuestion()" class="hidden w-full py-4 bg-green-500 text-white text-xl font-bold rounded-xl shadow-md border-b-4 border-green-700 mb-8">
+      つぎのもんだい
+    </button>
+  </div>
+
+  <script>
+    let mode = '1digit';
+    let qA = 0;
+    let qB = 0;
+    
+    // そろばんの状態
+    const columns = [
+      { id: '100s', x: 40, value: 0 },
+      { id: '10s',  x: 120, value: 0 },
+      { id: '1s',   x: 200, value: 0 }
+    ];
+    let beadState = {};
+
+    // 画面・状態管理
+    let isInteractive = true;
+    let explainSteps = [];
+    let currentStep = 0;
+    
+    // アニメーション管理
+    let animationId = null;
+    let onAnimationComplete = null;
+    let currentAnimSpeed = 0.1; // 動きを間延びしない速度に
+    let currentAnimStep = null;
+    let currentActionIndex = 0;
+    let sequenceTimeoutId = null;
+
+    // ゴーストアニメーション用
+    let ghostAnimationId = null;
+    let ghostState = { active: false, colIndex: 0, val: 0, progress: 0 };
+
+    const canvas = document.getElementById('sorobanCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // ホームへ戻る
+    function backToHome() {
+      document.getElementById('gameScreen').classList.add('hidden');
+      document.getElementById('gameScreen').classList.remove('flex');
+      document.getElementById('homeScreen').classList.remove('hidden');
+      clearAnimationQueue();
+    }
+
+    // ゲーム開始
+    function startGame(selectedMode) {
+      mode = selectedMode;
+      document.getElementById('homeScreen').classList.add('hidden');
+      document.getElementById('gameScreen').classList.remove('hidden');
+      document.getElementById('gameScreen').classList.add('flex');
+      generateQuestion();
+    }
+
+    // 問題を作る
+    function generateQuestion() {
+      if (mode === '1digit') {
+        qA = Math.floor(Math.random() * 9) + 1;
+        qB = Math.floor(Math.random() * 9) + 1;
+      } else if (mode === '2digit1') {
+        qA = Math.floor(Math.random() * 90) + 10;
+        qB = Math.floor(Math.random() * 9) + 1;
+      } else {
+        qA = Math.floor(Math.random() * 90) + 10;
+        qB = Math.floor(Math.random() * 90) + 10;
+        // 答えが999を超えないように
+        if (qA + qB > 999) {
+          qA = 50; qB = 40;
+        }
+      }
+
+      // UIリセット
+      document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ？`;
+      
+      let aStr = String(qA).padStart(2, ' ');
+      document.getElementById('hTop10').innerText = aStr[0] === ' ' ? '' : aStr[0];
+      document.getElementById('hTop1').innerText = aStr[1];
+      
+      let bStr = String(qB).padStart(2, ' ');
+      document.getElementById('hBot10').innerText = bStr[0] === ' ' ? '' : bStr[0];
+      document.getElementById('hBot1').innerText = bStr[1];
+      
+      let resStr = String(qA + qB).padStart(3, ' ');
+      document.getElementById('hRes100').innerText = resStr[0] === ' ' ? '' : resStr[0];
+      document.getElementById('hRes10').innerText = resStr[1] === ' ' ? '' : resStr[1];
+      document.getElementById('hRes1').innerText = resStr[2];
+
+      document.getElementById('hResCont').classList.remove('opacity-100');
+      document.getElementById('hResCont').classList.add('opacity-0');
+      
+      // ハイライト解除
+      document.getElementById('hTop10').classList.remove('hissan-active');
+      document.getElementById('hTop1').classList.remove('hissan-active');
+      document.getElementById('hBot10').classList.remove('hissan-active');
+      document.getElementById('hBot1').classList.remove('hissan-active');
+
+      document.getElementById('explainBox').classList.add('hidden');
+      document.getElementById('initialButtons').classList.remove('hidden');
+      document.getElementById('explainButtons').classList.add('hidden');
+      document.getElementById('nextQuestionBtn').classList.add('hidden');
+      
+      isInteractive = true;
+      currentAnimSpeed = 0.2;
+
+      initSoroban();
+      setSorobanValueInstantly(0); 
+      buildSteps(qA, qB);
+    }
+
+    // 運指の解説ステップ生成
+    function getAddExplainInfo(a, b, is10sColumn, currentVal, multiplier) {
+      if (b === 0) return [];
+      
+      let actions = [];
+      let colName = is10sColumn ? "十のくらい" : "一のくらい";
+      let targetColName = is10sColumn ? "百のくらい" : "十のくらい";
+      
+      // 前置き
+      actions.push({ text: `つぎは、${colName}に「${b}」を足すよ。<br>`, val: currentVal });
+      
+      if (a + b < 10) {
+        // --- 繰り上がりなし ---
+        let n1 = a % 5;
+        let n5 = Math.floor(a / 5);
+        let b1 = b % 5;
+        
+        let canPlaceDirectly = false;
+        if (b < 5) {
+          if (n1 + b < 5) canPlaceDirectly = true;
+        } else {
+          if (n5 === 0 && n1 + b1 < 5) canPlaceDirectly = true;
+        }
+        
+        if (canPlaceDirectly) {
+          actions.push({ text: `そのまま「${b}」をおくよ。`, val: currentVal + b * multiplier });
+        } else {
+          // 5のまとまりを使う
+          let comp5 = 5 - b;
+          actions.push({ text: `「${b}」はそのままおけないから、<br>`, val: currentVal, ghost: { colIndex: is10sColumn ? 1 : 2, val: b } }); 
+          actions.push({ text: `5をおいて、`, val: currentVal + 5 * multiplier });
+          actions.push({ text: `「${comp5}」をはらうよ。`, val: currentVal + (5 - comp5) * multiplier });
+        }
+      } else {
+        // --- 10への繰り上がりあり ---
+        let comp10 = 10 - b; 
+        let n1 = a % 5;
+        let n5 = Math.floor(a / 5);
+        
+        let canSubDirectly = false;
+        if (comp10 < 5) {
+          if (n1 >= comp10) canSubDirectly = true;
+        } else {
+          if (n5 === 1 && n1 >= (comp10 - 5)) canSubDirectly = true;
+        }
+
+        let carryMultiplier = multiplier * 10;
+        let chainCarry = false;
+        if (!is10sColumn) {
+          let current10s = Math.floor(currentVal / 10) % 10;
+          if (current10s === 9) chainCarry = true;
+        }
+
+        actions.push({ text: `「${b}」はおけないから、<br>`, val: currentVal, ghost: { colIndex: is10sColumn ? 1 : 2, val: b } }); 
+
+        if (canSubDirectly) {
+          if (chainCarry) {
+            actions.push({ text: `「${comp10}」をはらって、`, val: currentVal - comp10 * multiplier });
+            actions.push({ text: `でも十のくらいはいっぱいだから、9をはらって、`, val: currentVal - comp10 * multiplier - 90 });
+            actions.push({ text: `百のくらいを上げるよ。`, val: currentVal - comp10 * multiplier - 90 + 100 });
+          } else {
+            actions.push({ text: `「${comp10}」をはらって、`, val: currentVal - comp10 * multiplier });
+            actions.push({ text: `${targetColName}を上げるよ。`, val: currentVal - comp10 * multiplier + 1 * carryMultiplier });
+          }
+        } else {
+          // 5を払って入れるパターン
+          let addBack = b - 5;
+          if (chainCarry) {
+            actions.push({ text: `「${addBack}」をあげて、`, val: currentVal + addBack * multiplier });
+            actions.push({ text: `5をはらって、`, val: currentVal + addBack * multiplier - 5 * multiplier });
+            actions.push({ text: `でも十のくらいはいっぱいだから、9をはらって、`, val: currentVal + addBack * multiplier - 5 * multiplier - 90 });
+            actions.push({ text: `百のくらいを上げるよ。`, val: currentVal + addBack * multiplier - 5 * multiplier - 90 + 100 });
+          } else {
+            actions.push({ text: `「${addBack}」をあげて、`, val: currentVal + addBack * multiplier });
+            actions.push({ text: `5をはらって、`, val: currentVal + addBack * multiplier - 5 * multiplier });
+            actions.push({ text: `${targetColName}を上げるよ。`, val: currentVal + addBack * multiplier - 5 * multiplier + 1 * carryMultiplier });
+          }
+        }
+      }
+      return actions;
+    }
+
+    // 解説ステップデータを構築
+    function buildSteps(a, b) {
+      explainSteps = [];
+      
+      explainSteps.push({
+        actions: [
+          { text: `はじめに、`, val: 0 },
+          { text: `「${a}」をおくよ。`, val: a }
+        ],
+        prevVal: 0,
+        val: a,
+        hissanHlTop: true,
+        hissanHlBottom10: false,
+        hissanHlBottom1: false,
+        showResult: false
+      });
+      
+      let b10 = Math.floor(b / 10) * 10;
+      let b1 = b % 10;
+      let currentVal = a;
+      
+      if (b10 > 0) {
+        let b10_digit = Math.floor(b10 / 10);
+        let current_a10_digit = Math.floor((currentVal % 100) / 10);
+        let actions = getAddExplainInfo(current_a10_digit, b10_digit, true, currentVal, 10);
+        let nextVal = currentVal + b10;
+        explainSteps.push({
+          actions: actions,
+          prevVal: currentVal,
+          val: nextVal,
+          hissanHlTop: false,
+          hissanHlBottom10: true,
+          hissanHlBottom1: false,
+          showResult: false
+        });
+        currentVal = nextVal;
+      }
+      
+      if (b1 > 0) {
+        let b1_digit = b1;
+        let current_a1_digit = currentVal % 10;
+        let actions = getAddExplainInfo(current_a1_digit, b1_digit, false, currentVal, 1);
+        let nextVal = currentVal + b1;
+        explainSteps.push({
+          actions: actions,
+          prevVal: currentVal,
+          val: nextVal,
+          hissanHlTop: false,
+          hissanHlBottom10: false,
+          hissanHlBottom1: true,
+          showResult: false
+        });
+        currentVal = nextVal;
+      }
+      
+      explainSteps.push({
+        text: `<div class="text-3xl mt-1">こたえは「<span class="text-5xl text-red-500 mx-1 font-black">${a + b}</span>」だよ。</div>`,
+        prevVal: currentVal,
+        val: a + b,
+        hissanHlTop: false,
+        hissanHlBottom10: false,
+        hissanHlBottom1: false,
+        showResult: true
+      });
+    }
+
+    // 解説開始
+    function startExplain() {
+      document.getElementById('initialButtons').classList.add('hidden');
+      document.getElementById('explainBox').classList.remove('hidden');
+      isInteractive = false; 
+      currentAnimSpeed = 0.1; 
+      
+      setSorobanValueInstantly(0);
+      currentStep = 0;
+      playStep();
+    }
+
+    function playStep() {
+      let step = explainSteps[currentStep];
+      
+      // 筆算ハイライト
+      document.getElementById('hTop10').classList.toggle('hissan-active', step.hissanHlTop);
+      document.getElementById('hTop1').classList.toggle('hissan-active', step.hissanHlTop);
+      document.getElementById('hBot10').classList.toggle('hissan-active', step.hissanHlBottom10);
+      document.getElementById('hBot1').classList.toggle('hissan-active', step.hissanHlBottom1);
+      
+      if (step.showResult) {
+        document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ${step.val}`;
+        document.getElementById('hResCont').classList.remove('opacity-0');
+        document.getElementById('hResCont').classList.add('opacity-100');
+        document.getElementById('explainButtons').classList.add('hidden');
+        document.getElementById('nextQuestionBtn').classList.remove('hidden');
+      } else {
+        document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ？`;
+        document.getElementById('explainButtons').classList.remove('hidden');
+        document.getElementById('nextStepBtn').innerText = (currentStep === explainSteps.length - 2) ? "こたえをみる" : "つぎへ";
+      }
+      
+      updateExplainText(step, -1);
+      setSorobanValueInstantly(step.prevVal);
+      startSorobanAnimationSequence(step);
+    }
+
+    function replayCurrentStep() {
+      let step = explainSteps[currentStep];
+      setSorobanValueInstantly(step.prevVal);
+      startSorobanAnimationSequence(step);
+    }
+
+    function nextExplainStep() {
+      if (currentStep < explainSteps.length - 1) {
+        currentStep++;
+        playStep();
+      }
+    }
+
+    function showAnswerInstantly() {
+      document.getElementById('initialButtons').classList.add('hidden');
+      document.getElementById('nextQuestionBtn').classList.remove('hidden');
+      document.getElementById('hResCont').classList.remove('opacity-0');
+      document.getElementById('hResCont').classList.add('opacity-100');
+      document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ${qA + qB}`;
+      
+      isInteractive = false;
+      clearAnimationQueue();
+      currentAnimSpeed = 0.2;
+      setSorobanValueAnimatedTarget(qA + qB, () => {
+        resetBeadsColor();
+      });
+    }
+
+    function clearAnimationQueue() {
+      currentAnimStep = null;
+      onAnimationComplete = null;
+      if (sequenceTimeoutId) {
+        clearTimeout(sequenceTimeoutId);
+        sequenceTimeoutId = null;
+      }
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+      if (ghostAnimationId) {
+        cancelAnimationFrame(ghostAnimationId);
+        ghostAnimationId = null;
+      }
+      ghostState.active = false;
+    }
+
+    function startSorobanAnimationSequence(step) {
+      clearAnimationQueue();
+      if (step.showResult) {
+        document.getElementById('sorobanMessage').innerHTML = step.text;
+        setSorobanValueAnimatedTarget(step.val, () => {
+          setTimeout(resetBeadsColor, 500);
+        });
+        return;
+      }
+      
+      currentAnimStep = step;
+      currentActionIndex = 0;
+      playNextInSequence();
+    }
+
+    function resetBeadsColor() {
+      columns.forEach(col => {
+        beadState[col.id].bead5.color = 'normal';
+        beadState[col.id].beads1.forEach(b => b.color = 'normal');
+      });
+      renderSoroban();
+    }
+
+    function updateExplainText(step, activeIndex) {
+      if (step.showResult) {
+        document.getElementById('sorobanMessage').innerHTML = step.text;
+        return;
+      }
+      
+      let html = "";
+      step.actions.forEach((act, idx) => {
+        if (idx === activeIndex) {
+          html += `<span class="text-red-600 font-bold bg-yellow-100 px-1 rounded transition-colors duration-300">${act.text}</span>`;
+        } else {
+          html += `<span class="transition-colors duration-300">${act.text}</span>`;
+        }
+      });
+      document.getElementById('sorobanMessage').innerHTML = html;
+    }
+
+    function playNextInSequence() {
+      if (!currentAnimStep || !currentAnimStep.actions) return;
+      
+      if (currentActionIndex >= currentAnimStep.actions.length) {
+        updateExplainText(currentAnimStep, -1);
+        resetBeadsColor();
+        return;
+      }
+      
+      updateExplainText(currentAnimStep, currentActionIndex);
+      let nextAction = currentAnimStep.actions[currentActionIndex];
+
+      // ゴーストアニメーション（置こうとする動き）のセットアップ
+      if (nextAction.ghost) {
+        ghostState = {
+          active: true,
+          colIndex: nextAction.ghost.colIndex,
+          val: nextAction.ghost.val,
+          progress: 0
+        };
+        if (!ghostAnimationId) animateGhost();
+      } else {
+        ghostState.active = false;
+      }
+
+      setSorobanValueAnimatedTarget(nextAction.val, () => {
+        currentActionIndex++;
+        if (currentActionIndex < currentAnimStep.actions.length) {
+          sequenceTimeoutId = setTimeout(() => {
+            playNextInSequence();
+          }, 1000); // 1秒のタメ
+        } else {
+          sequenceTimeoutId = setTimeout(() => {
+            updateExplainText(currentAnimStep, -1);
+            resetBeadsColor();
+          }, 1000); 
+        }
+      });
+    }
+
+    // 珠の座標を定義（厚みアップ対応）
+    function initSoroban() {
+      columns.forEach(col => {
+        beadState[col.id] = {
+          bead5: { y: 24, targetY: 24, color: 'normal' },
+          beads1: [
+            { y: 92, targetY: 92, color: 'normal' },
+            { y: 120, targetY: 120, color: 'normal' },
+            { y: 148, targetY: 148, color: 'normal' },
+            { y: 176, targetY: 176, color: 'normal' }
+          ]
+        };
+      });
+      renderSoroban();
+    }
+
+    // 共通の描画処理
+    function renderSoroban() {
+      drawSorobanFrame();
+      drawAllBeads();
+      drawGhostBeads();
+    }
+
+    function drawSorobanFrame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // 枠
+      ctx.fillStyle = "#8B4513";
+      ctx.fillRect(0, 0, canvas.width, 10);
+      ctx.fillRect(0, canvas.height - 10, canvas.width, 10);
+      ctx.fillRect(0, 0, 10, canvas.height);
+      ctx.fillRect(canvas.width - 10, 0, 10, canvas.height);
+      
+      // 梁
+      ctx.fillRect(0, 60, canvas.width, 6);
+      
+      // 定位点
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.arc(columns[2].x, 63, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 軸
+      ctx.fillStyle = "#A0522D";
+      columns.forEach(col => {
+        ctx.fillRect(col.x - 2, 10, 4, canvas.height - 20);
+      });
+    }
+
+    function drawAllBeads() {
+      columns.forEach(col => {
+        let state = beadState[col.id];
+        drawBead(col.x, state.bead5.y, state.bead5.color);
+        state.beads1.forEach(b => {
+          drawBead(col.x, b.y, b.color);
+        });
+      });
+    }
+
+    function drawBead(x, y, colorType = 'normal') {
+      ctx.beginPath();
+      // 立体感を持たせるため縦半径を14に拡大（厚み）
+      ctx.ellipse(x, y, 24, 14, 0, 0, Math.PI * 2);
+      
+      if (colorType === 'add') {
+        ctx.fillStyle = "#ef4444"; // 赤
+      } else if (colorType === 'sub') {
+        ctx.fillStyle = "#3b82f6"; // 青
+      } else if (colorType === 'ghost') {
+        ctx.fillStyle = "#9ca3af"; // 灰色（ゴースト）
+      } else {
+        ctx.fillStyle = "#f59e0b"; // 木の色
+      }
+      
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = (colorType === 'ghost') ? "#6b7280" : "#b45309";
+      ctx.stroke();
+      
+      // 立体感のハイライト
+      ctx.beginPath();
+      ctx.ellipse(x, y - 4, 16, 6, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.fill();
+    }
+
+    // ❌マークを描く関数
+    function drawCrossMark(x, y) {
+      ctx.save();
+      ctx.globalAlpha = 1.0; // 不透明
+      ctx.strokeStyle = "#dc2626"; // 赤色
+      ctx.lineWidth = 4;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y - 8);
+      ctx.lineTo(x + 10, y + 8);
+      ctx.moveTo(x + 10, y - 8);
+      ctx.lineTo(x - 10, y + 8);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ゴースト（半透明の置こうとする動き）の描画
+    function drawGhostBeads() {
+      if (!ghostState.active) return;
+      let col = columns[ghostState.colIndex];
+      let v = ghostState.val;
+      let has5 = v >= 5;
+      let n1 = v % 5;
+
+      ctx.globalAlpha = 0.6; // 半透明
+
+      // イージング
+      let p = ghostState.progress;
+      let ease = p * (2 - p); 
+
+      if (has5) {
+        let startY = 24; 
+        let endY = 46;   
+        let y = startY + (endY - startY) * ease;
+        drawBead(col.x, y, 'ghost');
+        if (p >= 1) drawCrossMark(col.x, y);
+      }
+
+      for (let i = 0; i < n1; i++) {
+        let startY = 92 + i * 28; 
+        let endY = 80 + i * 28;    
+        let y = startY + (endY - startY) * ease;
+        drawBead(col.x, y, 'ghost');
+        if (p >= 1) drawCrossMark(col.x, y); 
+      }
+
+      ctx.globalAlpha = 1.0; 
+    }
+
+    function setSorobanValueInstantly(val) {
+      clearAnimationQueue();
+      let str = String(val).padStart(3, '0');
+      
+      columns.forEach((col, index) => {
+        let colVal = parseInt(str[index]);
+        col.value = colVal;
+        let state = beadState[col.id];
+        let hasFive = colVal >= 5;
+        let n = colVal % 5;
+        
+        state.bead5.y = hasFive ? 46 : 24;
+        state.bead5.targetY = state.bead5.y;
+        state.bead5.color = 'normal';
+        
+        for (let i = 0; i < 4; i++) {
+          let target1 = (i < n) ? (80 + i * 28) : (176 - (3 - i) * 28);
+          state.beads1[i].y = target1;
+          state.beads1[i].targetY = target1;
+          state.beads1[i].color = 'normal';
+        }
+      });
+      renderSoroban();
+    }
+
+    function setSorobanValueAnimatedTarget(val, cb) {
+      let str = String(val).padStart(3, '0');
+      let changed = false;
+
+      columns.forEach((col, index) => {
+        let colVal = parseInt(str[index]);
+        col.value = colVal; 
+        let state = beadState[col.id];
+        let hasFive = colVal >= 5;
+        let n = colVal % 5;
+        
+        let target5 = hasFive ? 46 : 24;
+        if (state.bead5.targetY !== target5) {
+          state.bead5.color = (target5 === 46) ? 'add' : 'sub';
+          state.bead5.targetY = target5;
+          changed = true;
+        } else {
+          state.bead5.color = 'normal';
+        }
+        
+        for (let i = 0; i < 4; i++) {
+          let target1 = (i < n) ? (80 + i * 28) : (176 - (3 - i) * 28);
+          if (state.beads1[i].targetY !== target1) {
+            state.beads1[i].color = (target1 < state.beads1[i].targetY) ? 'add' : 'sub'; 
+            state.beads1[i].targetY = target1;
+            changed = true;
+          } else {
+            state.beads1[i].color = 'normal';
+          }
+        }
+      });
+
+      if (changed) {
+        onAnimationComplete = cb;
+        if (!animationId) animateSoroban();
+      } else {
+        columns.forEach(col => {
+          beadState[col.id].bead5.color = 'normal';
+          beadState[col.id].beads1.forEach(b => b.color = 'normal');
+        });
+        renderSoroban();
+        if (cb) cb();
+      }
+    }
+
+    // ゴースト用のアニメーションループ
+    function animateGhost() {
+      if (!ghostState.active) {
+        ghostAnimationId = null;
+        return;
+      }
+      
+      ghostState.progress += 0.05; 
+      if (ghostState.progress > 1) ghostState.progress = 1;
+
+      renderSoroban();
+
+      if (ghostState.progress < 1) {
+        ghostAnimationId = requestAnimationFrame(animateGhost);
+      } else {
+        ghostAnimationId = null;
+      }
+    }
+
+    // 実際の珠のアニメーションループ
+    function animateSoroban() {
+      let isMoving = false;
+      const speed = currentAnimSpeed;
+
+      columns.forEach(col => {
+        let state = beadState[col.id];
+        if (Math.abs(state.bead5.targetY - state.bead5.y) > 0.5) {
+          state.bead5.y += (state.bead5.targetY - state.bead5.y) * speed;
+          isMoving = true;
+        } else {
+          state.bead5.y = state.bead5.targetY;
+        }
+        
+        state.beads1.forEach(b => {
+          if (Math.abs(b.targetY - b.y) > 0.5) {
+            b.y += (b.targetY - b.y) * speed;
+            isMoving = true;
+          } else {
+            b.y = b.targetY;
+          }
+        });
+      });
+
+      renderSoroban();
+
+      if (isMoving) {
+        animationId = requestAnimationFrame(animateSoroban);
+      } else {
+        animationId = null;
+        if (onAnimationComplete) {
+          let cb = onAnimationComplete;
+          onAnimationComplete = null;
+          cb();
+        }
+      }
+    }
+
+    // ユーザー操作
+    canvas.addEventListener('pointerdown', (e) => {
+      if (!isInteractive) return; 
+      
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+
+      columns.forEach(col => {
+        if (Math.abs(x - col.x) < 30) {
+          let state = beadState[col.id];
+          
+          if (y > 10 && y < 60) {
+            let isPlaced = (state.bead5.targetY === 46);
+            state.bead5.targetY = isPlaced ? 24 : 46;
+            col.value = isPlaced ? col.value - 5 : col.value + 5;
+          }
+          
+          if (y > 65 && y < 190) {
+            let clickedIndex = -1;
+            for(let i=0; i<4; i++){
+               if(Math.abs(y - state.beads1[i].y) < 25) { // 厚みが増したので当たり判定を少し広く
+                   clickedIndex = i;
+                   break;
+               }
+            }
+
+            if (clickedIndex !== -1) {
+              let b = state.beads1[clickedIndex];
+              let isPlaced = b.targetY === (80 + clickedIndex * 28);
+
+              if (!isPlaced) {
+                let current1s = col.value % 5;
+                let addAmount = (clickedIndex + 1) - current1s;
+                col.value += addAmount;
+                for (let i = 0; i <= clickedIndex; i++) {
+                   state.beads1[i].targetY = 80 + i * 28;
+                }
+              } else {
+                let current1s = col.value % 5;
+                let subAmount = current1s - clickedIndex;
+                col.value -= subAmount;
+                for (let i = clickedIndex; i < 4; i++) {
+                   state.beads1[i].targetY = 176 - (3 - i) * 28;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!animationId) animateSoroban();
+    });
+
+    window.onload = function() {
+      initSoroban();
+    };
+
+  </script>
+</body>
+</html>
