@@ -63,6 +63,36 @@
     button:active {
       transform: scale(0.95);
     }
+    
+    /* 印刷用のスタイル */
+    @media print {
+      body {
+        background: white !important;
+        animation: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      #printScreen {
+        display: flex !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 0 !important;
+        background: white !important;
+      }
+      #printArea {
+        width: 100% !important;
+        max-width: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      #printGrid {
+        page-break-inside: avoid;
+      }
+    }
   </style>
 </head>
 <body class="text-gray-800 h-screen flex flex-col items-center">
@@ -105,6 +135,90 @@
         <span class="text-sm tracking-widest font-bold text-purple-100 bg-purple-600 bg-opacity-30 px-3 py-1 rounded-full mb-1">レベル：⭐️⭐️⭐️⭐️</span>
         <span class="text-xl font-bold">2けた ＋ 2けた</span>
       </button>
+
+      <!-- プリント機能へのボタン -->
+      <div class="w-full py-4 flex items-center justify-center">
+        <div class="h-px bg-gray-300 w-1/4"></div>
+        <span class="mx-4 text-gray-400 font-bold text-sm tracking-widest">おまけ</span>
+        <div class="h-px bg-gray-300 w-1/4"></div>
+      </div>
+      <button onclick="openPrintTypeScreen()" class="w-full py-3 bg-teal-500 text-white rounded-2xl shadow-lg border-b-4 border-teal-700 flex flex-col items-center">
+        <span class="text-xl font-bold flex items-center gap-2">
+          🖨️ プリントをつくる
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- プリント種類選択画面 -->
+  <div id="printTypeScreen" class="hidden flex-col items-center justify-start w-full h-full max-w-md p-4 relative pt-12">
+    <div class="w-full flex justify-start mb-6">
+      <button onclick="backToHomeFromPrintType()" class="px-4 py-2 bg-gray-200 rounded-full text-sm font-bold shadow">もどる</button>
+    </div>
+    
+    <div class="w-full text-center mb-6">
+      <span class="bg-teal-100 text-teal-700 font-bold px-6 py-2 rounded-full text-sm shadow-sm tracking-widest inline-block">
+        プリントをつくる
+      </span>
+    </div>
+    
+    <h2 class="text-2xl font-bold text-gray-700 mb-8 text-center leading-tight">どのレベルのもんだいを<br>いんさつする？</h2>
+
+    <div class="w-full space-y-4">
+      <button onclick="generatePrint('1digit')" class="w-full py-4 bg-blue-400 text-white rounded-2xl shadow-lg border-b-4 border-blue-600 flex flex-col items-center">
+        <span class="text-xl font-bold">1けた ＋ 1けた</span>
+      </button>
+      <button onclick="generatePrint('2digit1')" class="w-full py-4 bg-green-400 text-white rounded-2xl shadow-lg border-b-4 border-green-600 flex flex-col items-center">
+        <span class="text-xl font-bold">2けた ＋ 1けた</span>
+      </button>
+      <button onclick="generatePrint('2digit2')" class="w-full py-4 bg-purple-400 text-white rounded-2xl shadow-lg border-b-4 border-purple-600 flex flex-col items-center">
+        <span class="text-xl font-bold">2けた ＋ 2けた</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- プリント画面 -->
+  <div id="printScreen" class="hidden flex-col items-center w-full min-h-screen bg-gray-200 absolute top-0 left-0 z-40 overflow-y-auto">
+    <div class="w-full sticky top-0 bg-white p-3 flex justify-between shadow-md z-50 no-print max-w-4xl mx-auto">
+      <button onclick="backToHomeFromPrint()" class="px-4 py-2 bg-gray-200 rounded-full text-sm font-bold shadow">もどる</button>
+      <div class="flex gap-2">
+        <button onclick="reloadPrint()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-bold shadow border border-blue-200 flex items-center gap-1">
+          🔄 かえる
+        </button>
+        <button onclick="triggerPrint()" class="px-4 py-2 bg-teal-500 text-white rounded-full text-sm font-bold shadow border-b-2 border-teal-700 flex items-center gap-1">
+          🖨️ いんさつ
+        </button>
+      </div>
+    </div>
+
+    <!-- 印刷用ペーパーエリア (A4風の比率とサイズ) -->
+    <div id="printArea" class="w-full max-w-[21cm] bg-white p-10 mx-auto my-6 shadow-xl min-h-[29.7cm] text-black relative flex flex-col">
+      <div class="flex justify-between items-end border-b-[3px] border-gray-800 pb-3 mb-10 mt-4">
+        <div>
+          <h2 class="text-3xl font-bold tracking-widest text-gray-800 whitespace-nowrap">たしざん プリント</h2>
+          <p id="printLevel" class="text-gray-500 font-bold mt-2 text-sm tracking-widest"></p>
+        </div>
+        <div class="text-lg font-bold text-gray-700 flex items-end pb-1">
+          なまえ：<span class="inline-block w-48 border-b-2 border-gray-400 ml-2"></span>
+        </div>
+      </div>
+      
+      <div id="printGrid" class="grid grid-cols-3 gap-x-12 gap-y-20 flex-grow px-2">
+        <!-- JSで動的に生成 -->
+      </div>
+
+      <div class="mt-12 pt-4 border-t-2 border-dashed border-gray-300 text-xs text-gray-500">
+        <p class="font-bold mb-2">こたえ（おうちのひとへ）</p>
+        <div id="printAnswers" class="flex flex-wrap gap-x-6 gap-y-2 font-mono">
+          <!-- JSで動的に生成 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 印刷メッセージトースト -->
+    <div id="printMessage" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-4 rounded-xl shadow-2xl z-50 flex flex-col items-center text-center border-2 border-gray-600">
+      <p class="font-bold text-lg mb-2">⚠️ プレビュー画面では印刷できません</p>
+      <p class="text-sm leading-relaxed">右上の「新しいタブで開く」ボタン（↗️）から開き直して、<br>もう一度いんさつボタンを押してね！</p>
     </div>
   </div>
 
@@ -160,8 +274,9 @@
     </div>
 
     <!-- 解説メッセージエリア -->
+    <!-- ガタつき防止のため text-base に調整し padding を確保 -->
     <div id="explainBox" class="hidden w-full bg-blue-50 border-4 border-blue-200 p-4 rounded-xl shadow-sm mb-4 min-h-[7rem] flex items-center justify-center relative">
-      <div id="sorobanMessage" class="text-lg text-center font-bold text-gray-700 leading-relaxed w-full">
+      <div id="sorobanMessage" class="text-base text-center font-bold text-gray-700 leading-relaxed w-full">
         かいせつ を みてね！
       </div>
     </div>
@@ -247,6 +362,7 @@
   </div>
 
   <script>
+    // === 状態管理変数 ===
     let mode = '1digit';
     let questionCount = 1;
     let qA = 0;
@@ -270,11 +386,17 @@
     let ghostAnimationId = null;
     let ghostState = { active: false, colIndex: 0, val: 0, progress: 0 };
 
+    // キャンバスとコンテキストの取得（エラー原因解消）
     const canvas = document.getElementById('sorobanCanvas');
     const ctx = canvas.getContext('2d');
+    
+    let currentPrintType = '';
 
+    // 音声関連の変数初期化（エラー原因解消）
     let isAudioInitialized = false;
-    let buttonSynth, beadSynth, melodySynth;
+    let buttonSynth = null;
+    let beadSynth = null;
+    let melodySynth = null;
 
     async function initAudio() {
       if (isAudioInitialized) return;
@@ -320,11 +442,13 @@
     function playSuccessMelody() {
       if (isAudioInitialized && melodySynth) {
         const now = Tone.now();
+        // より短く軽快なメロディに調整
         melodySynth.triggerAttackRelease("C6", "16n", now);
-        melodySynth.triggerAttackRelease("G6", "16n", now + 0.15);
+        melodySynth.triggerAttackRelease("E6", "16n", now + 0.15);
       }
     }
 
+    // ユーザーのタップで音声を許可
     document.addEventListener('pointerdown', async (e) => {
       await initAudio();
       if (e.target.closest('button')) {
@@ -389,6 +513,113 @@
       clearAnimationQueue();
     }
 
+    // --- プリント機能 ---
+    function openPrintTypeScreen() {
+      playButtonSound();
+      document.getElementById('homeScreen').classList.add('hidden');
+      document.getElementById('printTypeScreen').classList.remove('hidden');
+      document.getElementById('printTypeScreen').classList.add('flex');
+    }
+
+    function backToHomeFromPrintType() {
+      playButtonSound();
+      document.getElementById('printTypeScreen').classList.add('hidden');
+      document.getElementById('printTypeScreen').classList.remove('flex');
+      document.getElementById('homeScreen').classList.remove('hidden');
+    }
+
+    function backToHomeFromPrint() {
+      playButtonSound();
+      document.getElementById('printScreen').classList.add('hidden');
+      document.getElementById('printScreen').classList.remove('flex');
+      document.getElementById('homeScreen').classList.remove('hidden');
+    }
+
+    function triggerPrint() {
+      playButtonSound();
+      // iframeの中（プレビュー画面）かどうかの判定
+      if (window !== window.parent) {
+        const msg = document.getElementById('printMessage');
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 5000);
+      } else {
+        window.print();
+      }
+    }
+
+    function generatePrint(type) {
+      playButtonSound();
+      currentPrintType = type;
+      document.getElementById('printTypeScreen').classList.add('hidden');
+      document.getElementById('printTypeScreen').classList.remove('flex');
+      document.getElementById('printScreen').classList.remove('hidden');
+      document.getElementById('printScreen').classList.add('flex');
+      
+      renderPrint(type);
+    }
+
+    function reloadPrint() {
+      playButtonSound();
+      renderPrint(currentPrintType);
+    }
+
+    function renderPrint(type) {
+      const grid = document.getElementById('printGrid');
+      const answersDiv = document.getElementById('printAnswers');
+      const levelText = document.getElementById('printLevel');
+      
+      grid.innerHTML = '';
+      answersDiv.innerHTML = '';
+      
+      let titleStr = '';
+      if (type === '1digit') titleStr = '1けた ＋ 1けた';
+      else if (type === '2digit1') titleStr = '2けた ＋ 1けた';
+      else if (type === '2digit2') titleStr = '2けた ＋ 2けた';
+      
+      levelText.innerText = `レベル： ${titleStr}`;
+
+      let questions = [];
+      for (let i = 0; i < 12; i++) {
+        let a, b;
+        if (type === '1digit') {
+          a = Math.floor(Math.random() * 9) + 1;
+          b = Math.floor(Math.random() * 9) + 1;
+        } else if (type === '2digit1') {
+          a = Math.floor(Math.random() * 90) + 10;
+          b = Math.floor(Math.random() * 9) + 1;
+        } else {
+          a = Math.floor(Math.random() * 90) + 10;
+          b = Math.floor(Math.random() * 90) + 10;
+          if (a + b > 999) { a = 50; b = 40; } 
+        }
+        questions.push({a, b});
+      }
+
+      questions.forEach((q, index) => {
+        const qNum = index + 1;
+        const aStr = String(q.a).padStart(2, ' ').replace(/ /g, '&nbsp;');
+        const bStr = String(q.b).padStart(2, ' ').replace(/ /g, '&nbsp;');
+        
+        const qHtml = `
+          <div class="flex flex-col w-full">
+            <div class="text-left text-sm font-bold text-gray-500 mb-2 tracking-widest">(${qNum})</div>
+            <div class="flex flex-col items-end w-24 mx-auto text-[32px] font-mono tracking-[0.5em] font-medium leading-none">
+              <div class="pr-[0.25em]">${aStr}</div>
+              <div class="flex items-center w-full justify-end border-b-[3px] border-gray-800 pb-2 mt-2">
+                <span class="mr-2 tracking-normal font-sans text-xl">＋</span>
+                <span class="pr-[0.25em]">${bStr}</span>
+              </div>
+              <div class="h-16 w-full"></div>
+            </div>
+          </div>
+        `;
+        grid.insertAdjacentHTML('beforeend', qHtml);
+        
+        const ansHtml = `<span class="w-16 inline-block">(${qNum}) ${q.a + q.b}</span>`;
+        answersDiv.insertAdjacentHTML('beforeend', ansHtml);
+      });
+    }
+
     function startGame(selectedMode) {
       mode = selectedMode;
       questionCount = 1;
@@ -430,9 +661,7 @@
       } else {
         qA = Math.floor(Math.random() * 90) + 10;
         qB = Math.floor(Math.random() * 90) + 10;
-        if (qA + qB > 999) {
-          qA = 50; qB = 40;
-        }
+        if (qA + qB > 999) { qA = 50; qB = 40; }
       }
 
       if (mode !== 'intro') {
@@ -622,7 +851,7 @@
       }
 
       explainSteps.push({
-        text: `こたえは「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1">${a + b}</span>」だよ。`,
+        text: `こたえは「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1 mx-1">${a + b}</span>」だよ。`,
         prevVal: currentVal,
         val: a + b,
         hissanHlTop: false,
@@ -653,7 +882,7 @@
       });
       
       explainSteps.push({
-        text: `これが「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1">${num}</span>」だよ。`,
+        text: `これが「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1 mx-1">${num}</span>」だよ。`,
         prevVal: num,
         val: num,
         showResult: true
@@ -726,9 +955,9 @@
         document.getElementById('hResCont').classList.remove('opacity-0');
         document.getElementById('hResCont').classList.add('opacity-100');
         document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ${qA + qB}`;
-        document.getElementById('sorobanMessage').innerHTML = `こたえは「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1">${qA + qB}</span>」だよ。`;
+        document.getElementById('sorobanMessage').innerHTML = `こたえは「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1 mx-1">${qA + qB}</span>」だよ。`;
       } else {
-        document.getElementById('sorobanMessage').innerHTML = `これが「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1">${qA}</span>」だよ。`;
+        document.getElementById('sorobanMessage').innerHTML = `これが「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1 mx-1">${qA}</span>」だよ。`;
       }
       
       document.getElementById('initialButtons').classList.add('hidden');
@@ -786,6 +1015,7 @@
       playNextInSequence();
     }
 
+    // ガタつきを防ぐためにCSSクラスをシンプルに構成
     function updateExplainText(step, activeIndex) {
       if (step.showResult) {
         document.getElementById('sorobanMessage').innerHTML = step.text;
@@ -810,9 +1040,11 @@
         }
 
         if (isHighlighted) {
-          html += `<span class="text-red-600 font-bold bg-yellow-100 px-1 rounded transition-colors duration-300">${act.text}</span>`;
+          // ハイライト時（背景色と文字色だけ変更、太さは変わらないのでガタつかない）
+          html += `<span class="text-red-600 bg-yellow-100 rounded transition-colors duration-300">${act.text}</span>`;
         } else {
-          html += `<span class="transition-colors duration-300 text-gray-700">${act.text}</span>`;
+          // 通常時
+          html += `<span class="text-gray-700 transition-colors duration-300">${act.text}</span>`;
         }
       });
       document.getElementById('sorobanMessage').innerHTML = html;
@@ -945,8 +1177,6 @@
 
     function drawBead(x, y, colorType = 'normal') {
       ctx.beginPath();
-      
-      // 珠の厚み（縦方向の半径）を12に設定し、枠内で重ならない最大サイズに調整
       ctx.ellipse(x, y, 26, 12, 0, 0, Math.PI * 2);
       
       if (colorType === 'add') {
@@ -965,7 +1195,6 @@
       ctx.stroke();
       
       ctx.beginPath();
-      // 光の反射も珠の形に合わせて微調整
       ctx.ellipse(x, y - 4, 18, 5, 0, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
       ctx.fill();
@@ -1035,7 +1264,6 @@
         state.bead5.color = 'normal';
         
         for (let i = 0; i < 4; i++) {
-          // 動かす距離を確保して重ならないように設定
           let target1 = (i < n) ? (78 + i * 24) : (106 + i * 24);
           state.beads1[i].y = target1;
           state.beads1[i].targetY = target1;
@@ -1214,8 +1442,10 @@
       
       const isLarge = localStorage.getItem('largeSoroban') === 'true';
       const checkbox = document.getElementById('largeSorobanCheck');
-      checkbox.checked = isLarge;
-      toggleLargeSoroban(isLarge);
+      if (checkbox) {
+        checkbox.checked = isLarge;
+        toggleLargeSoroban(isLarge);
+      }
     };
 
   </script>
