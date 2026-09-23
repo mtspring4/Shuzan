@@ -64,27 +64,36 @@
       transform: scale(0.95);
     }
     
-    /* 印刷用のスタイル */
+    /* 印刷用のスタイル（徹底的に不要な高さを削る） */
     @media print {
       @page {
         size: A4 portrait;
         margin: 10mm;
       }
-      body {
+      html, body {
         background: white !important;
         animation: none !important;
         height: auto !important;
+        min-height: 0 !important;
         overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
       }
-      .no-print {
+      /* 印刷時に不要な画面をすべて消す */
+      #homeScreen, #printTypeScreen, #gameScreen, 
+      #settingsModal, #introModal, #clearModal, #printMessage, .no-print {
         display: none !important;
       }
       #printScreen {
         display: block !important;
         position: static !important;
-        width: 100%;
+        min-height: 0 !important;
+        height: auto !important;
+        width: 100% !important;
+        margin: 0 !important;
         padding: 0 !important;
         background: white !important;
+        overflow: visible !important;
       }
       #printArea {
         width: 100% !important;
@@ -92,6 +101,7 @@
         box-shadow: none !important;
         margin: 0 !important;
         padding: 0 !important;
+        page-break-after: avoid;
       }
       #printGrid {
         page-break-inside: avoid;
@@ -195,23 +205,24 @@
       </div>
     </div>
 
-    <!-- 印刷用ペーパーエリア (A4風の比率とサイズ) -->
+    <!-- 印刷用ペーパーエリア (少し小さく調整) -->
     <div id="printArea" class="w-full max-w-[21cm] bg-white px-8 py-6 mx-auto my-6 shadow-xl text-black relative flex flex-col">
-      <div class="flex justify-between items-end border-b-2 border-gray-800 pb-2 mb-6 mt-2">
+      <div class="flex justify-between items-end border-b-2 border-gray-800 pb-2 mb-4 mt-2">
         <div>
           <h2 class="text-xl font-bold tracking-widest text-gray-800 whitespace-nowrap">たしざん プリント</h2>
-          <p id="printLevel" class="text-gray-500 font-bold mt-1 text-[11px] tracking-widest"></p>
+          <p id="printLevel" class="text-gray-500 font-bold mt-1 text-[10px] tracking-widest"></p>
         </div>
-        <div class="text-sm font-bold text-gray-700 flex items-end pb-1">
-          なまえ：<span class="inline-block w-40 border-b border-gray-400 ml-2"></span>
+        <div class="text-xs font-bold text-gray-700 flex items-end pb-1">
+          なまえ：<span class="inline-block w-32 border-b border-gray-400 ml-2"></span>
         </div>
       </div>
       
-      <div id="printGrid" class="grid grid-cols-3 gap-x-16 gap-y-8 flex-grow px-2">
+      <!-- 問題の間隔を広く -->
+      <div id="printGrid" class="grid grid-cols-3 gap-x-12 gap-y-10 flex-grow px-4 mt-2">
         <!-- JSで動的に生成 -->
       </div>
 
-      <div class="mt-6 pt-3 border-t-2 border-dashed border-gray-300 text-[11px] text-gray-500">
+      <div class="mt-8 pt-3 border-t-2 border-dashed border-gray-300 text-[10px] text-gray-500">
         <p class="font-bold mb-1">こたえ（おうちのひとへ）</p>
         <div id="printAnswers" class="flex flex-wrap gap-x-6 gap-y-2 font-mono">
           <!-- JSで動的に生成 -->
@@ -220,7 +231,7 @@
     </div>
 
     <!-- 印刷メッセージトースト -->
-    <div id="printMessage" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-4 rounded-xl shadow-2xl z-50 flex flex-col items-center text-center border-2 border-gray-600">
+    <div id="printMessage" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-4 rounded-xl shadow-2xl z-50 flex flex-col items-center text-center border-2 border-gray-600 w-11/12 max-w-sm">
       <p class="font-bold text-lg mb-2">⚠️ プレビュー画面では印刷できません</p>
       <p class="text-sm leading-relaxed">右上の「新しいタブで開く」ボタン（↗️）から開き直して、<br>もう一度いんさつボタンを押してね！</p>
     </div>
@@ -278,9 +289,8 @@
     </div>
 
     <!-- 解説メッセージエリア -->
-    <!-- ガタつき防止のため text-base に調整し padding を確保 -->
-    <div id="explainBox" class="hidden w-full bg-blue-50 border-4 border-blue-200 p-4 rounded-xl shadow-sm mb-4 min-h-[7rem] flex items-center justify-center relative">
-      <div id="sorobanMessage" class="text-base text-center font-bold text-gray-700 leading-relaxed w-full">
+    <div id="explainBox" class="hidden w-full bg-blue-50 border-4 border-blue-200 py-3 px-2 rounded-xl shadow-sm mb-4 min-h-[6rem] flex items-center justify-center relative">
+      <div id="sorobanMessage" class="text-[14px] text-center font-bold text-gray-700 leading-relaxed w-full">
         かいせつ を みてね！
       </div>
     </div>
@@ -390,13 +400,12 @@
     let ghostAnimationId = null;
     let ghostState = { active: false, colIndex: 0, val: 0, progress: 0 };
 
-    // キャンバスとコンテキストの取得（エラー原因解消）
     const canvas = document.getElementById('sorobanCanvas');
     const ctx = canvas.getContext('2d');
     
     let currentPrintType = '';
 
-    // 音声関連の変数初期化（エラー原因解消）
+    // 音声関連の変数
     let isAudioInitialized = false;
     let buttonSynth = null;
     let beadSynth = null;
@@ -446,13 +455,11 @@
     function playSuccessMelody() {
       if (isAudioInitialized && melodySynth) {
         const now = Tone.now();
-        // より短く軽快なメロディに調整
         melodySynth.triggerAttackRelease("C6", "16n", now);
         melodySynth.triggerAttackRelease("E6", "16n", now + 0.15);
       }
     }
 
-    // ユーザーのタップで音声を許可
     document.addEventListener('pointerdown', async (e) => {
       await initAudio();
       if (e.target.closest('button')) {
@@ -541,7 +548,6 @@
 
     function triggerPrint() {
       playButtonSound();
-      // iframeの中（プレビュー画面）かどうかの判定
       if (window !== window.parent) {
         const msg = document.getElementById('printMessage');
         msg.classList.remove('hidden');
@@ -607,19 +613,19 @@
         const qHtml = `
           <div class="flex flex-col w-full">
             <div class="text-left text-[11px] font-bold text-gray-500 mb-1 tracking-widest">(${qNum})</div>
-            <div class="flex flex-col items-end w-16 mx-auto text-xl font-mono tracking-[0.4em] font-medium leading-none">
+            <div class="flex flex-col items-end w-14 mx-auto text-[18px] font-mono tracking-[0.4em] font-medium leading-none">
               <div class="pr-[0.2em]">${aStr}</div>
               <div class="flex items-center w-full justify-end border-b-[1.5px] border-gray-800 pb-1 mt-1">
-                <span class="mr-2 tracking-normal font-sans text-base">＋</span>
+                <span class="mr-2 tracking-normal font-sans text-sm">＋</span>
                 <span class="pr-[0.2em]">${bStr}</span>
               </div>
-              <div class="h-12 w-full"></div>
+              <div class="h-10 w-full"></div>
             </div>
           </div>
         `;
         grid.insertAdjacentHTML('beforeend', qHtml);
         
-        const ansHtml = `<span class="w-14 inline-block text-[11px]">(${qNum}) ${q.a + q.b}</span>`;
+        const ansHtml = `<span class="w-12 inline-block text-[10px]">(${qNum}) ${q.a + q.b}</span>`;
         answersDiv.insertAdjacentHTML('beforeend', ansHtml);
       });
     }
@@ -656,19 +662,19 @@
         document.getElementById('qCountText').innerText = `だい ${questionCount} もん`;
         document.getElementById('questionTitle').innerText = `すうじのおきかた`;
         document.getElementById('introTargetNum').innerText = qA;
-      } else if (mode === '1digit') {
-        qA = Math.floor(Math.random() * 9) + 1;
-        qB = Math.floor(Math.random() * 9) + 1;
-      } else if (mode === '2digit1') {
-        qA = Math.floor(Math.random() * 90) + 10;
-        qB = Math.floor(Math.random() * 9) + 1;
       } else {
-        qA = Math.floor(Math.random() * 90) + 10;
-        qB = Math.floor(Math.random() * 90) + 10;
-        if (qA + qB > 999) { qA = 50; qB = 40; }
-      }
+        if (mode === '1digit') {
+          qA = Math.floor(Math.random() * 9) + 1;
+          qB = Math.floor(Math.random() * 9) + 1;
+        } else if (mode === '2digit1') {
+          qA = Math.floor(Math.random() * 90) + 10;
+          qB = Math.floor(Math.random() * 9) + 1;
+        } else {
+          qA = Math.floor(Math.random() * 90) + 10;
+          qB = Math.floor(Math.random() * 90) + 10;
+          if (qA + qB > 999) { qA = 50; qB = 40; }
+        }
 
-      if (mode !== 'intro') {
         document.getElementById('qCountText').innerText = `だい ${questionCount} もん`;
         document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ？`;
         
@@ -855,7 +861,7 @@
       }
 
       explainSteps.push({
-        text: `こたえは「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1 mx-1">${a + b}</span>」だよ。`,
+        text: `こたえは「<span class="text-[22px] text-red-500 font-black inline-block transform translate-y-[2px] mx-1">${a + b}</span>」だよ。`,
         prevVal: currentVal,
         val: a + b,
         hissanHlTop: false,
@@ -886,7 +892,7 @@
       });
       
       explainSteps.push({
-        text: `これが「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1 mx-1">${num}</span>」だよ。`,
+        text: `これが「<span class="text-[22px] text-red-500 font-black inline-block transform translate-y-[2px] mx-1">${num}</span>」だよ。`,
         prevVal: num,
         val: num,
         showResult: true
@@ -959,9 +965,9 @@
         document.getElementById('hResCont').classList.remove('opacity-0');
         document.getElementById('hResCont').classList.add('opacity-100');
         document.getElementById('questionTitle').innerText = `${qA} ＋ ${qB} ＝ ${qA + qB}`;
-        document.getElementById('sorobanMessage').innerHTML = `こたえは「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1 mx-1">${qA + qB}</span>」だよ。`;
+        document.getElementById('sorobanMessage').innerHTML = `こたえは「<span class="text-[22px] text-red-500 font-black inline-block transform translate-y-[2px] mx-1">${qA + qB}</span>」だよ。`;
       } else {
-        document.getElementById('sorobanMessage').innerHTML = `これが「<span class="text-3xl text-red-500 font-black inline-block transform translate-y-1 mx-1">${qA}</span>」だよ。`;
+        document.getElementById('sorobanMessage').innerHTML = `これが「<span class="text-[22px] text-red-500 font-black inline-block transform translate-y-[2px] mx-1">${qA}</span>」だよ。`;
       }
       
       document.getElementById('initialButtons').classList.add('hidden');
@@ -1019,7 +1025,6 @@
       playNextInSequence();
     }
 
-    // ガタつきを防ぐためにCSSクラスをシンプルに構成
     function updateExplainText(step, activeIndex) {
       if (step.showResult) {
         document.getElementById('sorobanMessage').innerHTML = step.text;
@@ -1044,10 +1049,8 @@
         }
 
         if (isHighlighted) {
-          // ハイライト時（背景色と文字色だけ変更、太さは変わらないのでガタつかない）
           html += `<span class="text-red-600 bg-yellow-100 rounded transition-colors duration-300">${act.text}</span>`;
         } else {
-          // 通常時
           html += `<span class="text-gray-700 transition-colors duration-300">${act.text}</span>`;
         }
       });
@@ -1128,10 +1131,10 @@
         beadState[col.id] = {
           bead5: { y: 22, targetY: 22, color: 'normal' },
           beads1: [
-            { y: 106, targetY: 106, color: 'normal' },
-            { y: 130, targetY: 130, color: 'normal' },
-            { y: 154, targetY: 154, color: 'normal' },
-            { y: 178, targetY: 178, color: 'normal' }
+            { y: 104, targetY: 104, color: 'normal' },
+            { y: 126, targetY: 126, color: 'normal' },
+            { y: 148, targetY: 148, color: 'normal' },
+            { y: 170, targetY: 170, color: 'normal' }
           ]
         };
       });
@@ -1235,15 +1238,15 @@
 
       if (has5) {
         let startY = 22; 
-        let endY = 48;   
+        let endY = 46;   
         let y = startY + (endY - startY) * ease;
         drawBead(col.x, y, 'ghost');
         if (p >= 1) drawCrossMark(col.x, y);
       }
 
       for (let i = 0; i < n1; i++) {
-        let startY = 106 + i * 24; 
-        let endY = 78 + i * 24;    
+        let startY = 104 + i * 22; 
+        let endY = 78 + i * 22;    
         let y = startY + (endY - startY) * ease;
         drawBead(col.x, y, 'ghost');
         if (p >= 1) drawCrossMark(col.x, y); 
@@ -1263,12 +1266,12 @@
         let hasFive = colVal >= 5;
         let n = colVal % 5;
         
-        state.bead5.y = hasFive ? 48 : 22;
+        state.bead5.y = hasFive ? 46 : 22;
         state.bead5.targetY = state.bead5.y;
         state.bead5.color = 'normal';
         
         for (let i = 0; i < 4; i++) {
-          let target1 = (i < n) ? (78 + i * 24) : (106 + i * 24);
+          let target1 = (i < n) ? (78 + i * 22) : (104 + i * 22);
           state.beads1[i].y = target1;
           state.beads1[i].targetY = target1;
           state.beads1[i].color = 'normal';
@@ -1288,9 +1291,9 @@
         let hasFive = colVal >= 5;
         let n = colVal % 5;
         
-        let target5 = hasFive ? 48 : 22;
+        let target5 = hasFive ? 46 : 22;
         if (state.bead5.targetY !== target5) {
-          state.bead5.color = (target5 === 48) ? 'add' : 'sub';
+          state.bead5.color = (target5 === 46) ? 'add' : 'sub';
           state.bead5.targetY = target5;
           changed = true;
         } else {
@@ -1298,7 +1301,7 @@
         }
         
         for (let i = 0; i < 4; i++) {
-          let target1 = (i < n) ? (78 + i * 24) : (106 + i * 24);
+          let target1 = (i < n) ? (78 + i * 22) : (104 + i * 22);
           if (state.beads1[i].targetY !== target1) {
             state.beads1[i].color = (target1 < state.beads1[i].targetY) ? 'add' : 'sub'; 
             state.beads1[i].targetY = target1;
@@ -1393,8 +1396,8 @@
           let isChanged = false;
           
           if (y > 10 && y < 60) {
-            let isPlaced = (state.bead5.targetY === 48);
-            state.bead5.targetY = isPlaced ? 22 : 48;
+            let isPlaced = (state.bead5.targetY === 46);
+            state.bead5.targetY = isPlaced ? 22 : 46;
             col.value = isPlaced ? col.value - 5 : col.value + 5;
             isChanged = true;
           }
@@ -1410,14 +1413,14 @@
 
             if (clickedIndex !== -1) {
               let b = state.beads1[clickedIndex];
-              let isPlaced = b.targetY === (78 + clickedIndex * 24);
+              let isPlaced = b.targetY === (78 + clickedIndex * 22);
 
               if (!isPlaced) {
                 let current1s = col.value % 5;
                 let addAmount = (clickedIndex + 1) - current1s;
                 col.value += addAmount;
                 for (let i = 0; i <= clickedIndex; i++) {
-                   state.beads1[i].targetY = 78 + i * 24;
+                   state.beads1[i].targetY = 78 + i * 22;
                 }
                 isChanged = true;
               } else {
@@ -1425,7 +1428,7 @@
                 let subAmount = current1s - clickedIndex;
                 col.value -= subAmount;
                 for (let i = clickedIndex; i < 4; i++) {
-                   state.beads1[i].targetY = 106 + i * 24;
+                   state.beads1[i].targetY = 104 + i * 22;
                 }
                 isChanged = true;
               }
