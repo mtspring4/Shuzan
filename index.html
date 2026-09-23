@@ -1131,10 +1131,10 @@
         beadState[col.id] = {
           bead5: { y: 22, targetY: 22, color: 'normal' },
           beads1: [
-            { y: 104, targetY: 104, color: 'normal' },
-            { y: 126, targetY: 126, color: 'normal' },
-            { y: 148, targetY: 148, color: 'normal' },
-            { y: 170, targetY: 170, color: 'normal' }
+            { y: 112, targetY: 112, color: 'normal' },
+            { y: 134, targetY: 134, color: 'normal' },
+            { y: 156, targetY: 156, color: 'normal' },
+            { y: 178, targetY: 178, color: 'normal' }
           ]
         };
       });
@@ -1158,14 +1158,6 @@
       
       ctx.fillRect(0, 60, canvas.width, 6);
       
-      ctx.fillStyle = "#000";
-      ctx.beginPath();
-      let onesCol = activeColumns.find(c => c.id === '1s');
-      if (onesCol) {
-        ctx.arc(onesCol.x, 63, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
       ctx.fillStyle = "#A0522D";
       activeColumns.forEach(col => {
         ctx.fillRect(col.x - 2, 10, 4, canvas.height - 20);
@@ -1245,7 +1237,7 @@
       }
 
       for (let i = 0; i < n1; i++) {
-        let startY = 104 + i * 22; 
+        let startY = 112 + i * 22; 
         let endY = 78 + i * 22;    
         let y = startY + (endY - startY) * ease;
         drawBead(col.x, y, 'ghost');
@@ -1271,7 +1263,7 @@
         state.bead5.color = 'normal';
         
         for (let i = 0; i < 4; i++) {
-          let target1 = (i < n) ? (78 + i * 22) : (104 + i * 22);
+          let target1 = (i < n) ? (78 + i * 22) : (112 + i * 22);
           state.beads1[i].y = target1;
           state.beads1[i].targetY = target1;
           state.beads1[i].color = 'normal';
@@ -1301,7 +1293,7 @@
         }
         
         for (let i = 0; i < 4; i++) {
-          let target1 = (i < n) ? (78 + i * 22) : (104 + i * 22);
+          let target1 = (i < n) ? (78 + i * 22) : (112 + i * 22);
           if (state.beads1[i].targetY !== target1) {
             state.beads1[i].color = (target1 < state.beads1[i].targetY) ? 'add' : 'sub'; 
             state.beads1[i].targetY = target1;
@@ -1428,7 +1420,7 @@
                 let subAmount = current1s - clickedIndex;
                 col.value -= subAmount;
                 for (let i = clickedIndex; i < 4; i++) {
-                   state.beads1[i].targetY = 104 + i * 22;
+                   state.beads1[i].targetY = 112 + i * 22;
                 }
                 isChanged = true;
               }
