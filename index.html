@@ -192,23 +192,23 @@
     </div>
 
     <!-- 印刷用ペーパーエリア (A4風の比率とサイズ) -->
-    <div id="printArea" class="w-full max-w-[21cm] bg-white p-10 mx-auto my-6 shadow-xl min-h-[29.7cm] text-black relative flex flex-col">
-      <div class="flex justify-between items-end border-b-[3px] border-gray-800 pb-3 mb-10 mt-4">
+    <div id="printArea" class="w-full max-w-[21cm] bg-white p-6 mx-auto my-6 shadow-xl min-h-[29.7cm] text-black relative flex flex-col">
+      <div class="flex justify-between items-end border-b-2 border-gray-800 pb-2 mb-6 mt-2">
         <div>
-          <h2 class="text-3xl font-bold tracking-widest text-gray-800 whitespace-nowrap">たしざん プリント</h2>
-          <p id="printLevel" class="text-gray-500 font-bold mt-2 text-sm tracking-widest"></p>
+          <h2 class="text-2xl font-bold tracking-widest text-gray-800 whitespace-nowrap">たしざん プリント</h2>
+          <p id="printLevel" class="text-gray-500 font-bold mt-1 text-xs tracking-widest"></p>
         </div>
-        <div class="text-lg font-bold text-gray-700 flex items-end pb-1">
-          なまえ：<span class="inline-block w-48 border-b-2 border-gray-400 ml-2"></span>
+        <div class="text-base font-bold text-gray-700 flex items-end pb-1">
+          なまえ：<span class="inline-block w-40 border-b-2 border-gray-400 ml-2"></span>
         </div>
       </div>
       
-      <div id="printGrid" class="grid grid-cols-3 gap-x-12 gap-y-20 flex-grow px-2">
+      <div id="printGrid" class="grid grid-cols-3 gap-x-8 gap-y-12 flex-grow px-2">
         <!-- JSで動的に生成 -->
       </div>
 
-      <div class="mt-12 pt-4 border-t-2 border-dashed border-gray-300 text-xs text-gray-500">
-        <p class="font-bold mb-2">こたえ（おうちのひとへ）</p>
+      <div class="mt-6 pt-3 border-t-2 border-dashed border-gray-300 text-xs text-gray-500">
+        <p class="font-bold mb-1">こたえ（おうちのひとへ）</p>
         <div id="printAnswers" class="flex flex-wrap gap-x-6 gap-y-2 font-mono">
           <!-- JSで動的に生成 -->
         </div>
@@ -602,14 +602,14 @@
         
         const qHtml = `
           <div class="flex flex-col w-full">
-            <div class="text-left text-sm font-bold text-gray-500 mb-2 tracking-widest">(${qNum})</div>
-            <div class="flex flex-col items-end w-24 mx-auto text-[32px] font-mono tracking-[0.5em] font-medium leading-none">
+            <div class="text-left text-xs font-bold text-gray-500 mb-1 tracking-widest">(${qNum})</div>
+            <div class="flex flex-col items-end w-20 mx-auto text-2xl font-mono tracking-[0.5em] font-medium leading-none">
               <div class="pr-[0.25em]">${aStr}</div>
-              <div class="flex items-center w-full justify-end border-b-[3px] border-gray-800 pb-2 mt-2">
-                <span class="mr-2 tracking-normal font-sans text-xl">＋</span>
+              <div class="flex items-center w-full justify-end border-b-2 border-gray-800 pb-1 mt-1">
+                <span class="mr-1 tracking-normal font-sans text-lg">＋</span>
                 <span class="pr-[0.25em]">${bStr}</span>
               </div>
-              <div class="h-16 w-full"></div>
+              <div class="h-10 w-full"></div>
             </div>
           </div>
         `;
