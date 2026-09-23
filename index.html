@@ -66,18 +66,22 @@
     
     /* 印刷用のスタイル */
     @media print {
+      @page {
+        size: A4 portrait;
+        margin: 10mm;
+      }
       body {
         background: white !important;
         animation: none !important;
+        height: auto !important;
+        overflow: visible !important;
       }
       .no-print {
         display: none !important;
       }
       #printScreen {
-        display: flex !important;
-        position: absolute;
-        top: 0;
-        left: 0;
+        display: block !important;
+        position: static !important;
         width: 100%;
         padding: 0 !important;
         background: white !important;
@@ -192,22 +196,22 @@
     </div>
 
     <!-- 印刷用ペーパーエリア (A4風の比率とサイズ) -->
-    <div id="printArea" class="w-full max-w-[21cm] bg-white p-6 mx-auto my-6 shadow-xl min-h-[29.7cm] text-black relative flex flex-col">
+    <div id="printArea" class="w-full max-w-[21cm] bg-white px-8 py-6 mx-auto my-6 shadow-xl text-black relative flex flex-col">
       <div class="flex justify-between items-end border-b-2 border-gray-800 pb-2 mb-6 mt-2">
         <div>
-          <h2 class="text-2xl font-bold tracking-widest text-gray-800 whitespace-nowrap">たしざん プリント</h2>
-          <p id="printLevel" class="text-gray-500 font-bold mt-1 text-xs tracking-widest"></p>
+          <h2 class="text-xl font-bold tracking-widest text-gray-800 whitespace-nowrap">たしざん プリント</h2>
+          <p id="printLevel" class="text-gray-500 font-bold mt-1 text-[11px] tracking-widest"></p>
         </div>
-        <div class="text-base font-bold text-gray-700 flex items-end pb-1">
-          なまえ：<span class="inline-block w-40 border-b-2 border-gray-400 ml-2"></span>
+        <div class="text-sm font-bold text-gray-700 flex items-end pb-1">
+          なまえ：<span class="inline-block w-40 border-b border-gray-400 ml-2"></span>
         </div>
       </div>
       
-      <div id="printGrid" class="grid grid-cols-3 gap-x-8 gap-y-12 flex-grow px-2">
+      <div id="printGrid" class="grid grid-cols-3 gap-x-16 gap-y-8 flex-grow px-2">
         <!-- JSで動的に生成 -->
       </div>
 
-      <div class="mt-6 pt-3 border-t-2 border-dashed border-gray-300 text-xs text-gray-500">
+      <div class="mt-6 pt-3 border-t-2 border-dashed border-gray-300 text-[11px] text-gray-500">
         <p class="font-bold mb-1">こたえ（おうちのひとへ）</p>
         <div id="printAnswers" class="flex flex-wrap gap-x-6 gap-y-2 font-mono">
           <!-- JSで動的に生成 -->
@@ -602,20 +606,20 @@
         
         const qHtml = `
           <div class="flex flex-col w-full">
-            <div class="text-left text-xs font-bold text-gray-500 mb-1 tracking-widest">(${qNum})</div>
-            <div class="flex flex-col items-end w-20 mx-auto text-2xl font-mono tracking-[0.5em] font-medium leading-none">
-              <div class="pr-[0.25em]">${aStr}</div>
-              <div class="flex items-center w-full justify-end border-b-2 border-gray-800 pb-1 mt-1">
-                <span class="mr-1 tracking-normal font-sans text-lg">＋</span>
-                <span class="pr-[0.25em]">${bStr}</span>
+            <div class="text-left text-[11px] font-bold text-gray-500 mb-1 tracking-widest">(${qNum})</div>
+            <div class="flex flex-col items-end w-16 mx-auto text-xl font-mono tracking-[0.4em] font-medium leading-none">
+              <div class="pr-[0.2em]">${aStr}</div>
+              <div class="flex items-center w-full justify-end border-b-[1.5px] border-gray-800 pb-1 mt-1">
+                <span class="mr-2 tracking-normal font-sans text-base">＋</span>
+                <span class="pr-[0.2em]">${bStr}</span>
               </div>
-              <div class="h-10 w-full"></div>
+              <div class="h-12 w-full"></div>
             </div>
           </div>
         `;
         grid.insertAdjacentHTML('beforeend', qHtml);
         
-        const ansHtml = `<span class="w-16 inline-block">(${qNum}) ${q.a + q.b}</span>`;
+        const ansHtml = `<span class="w-14 inline-block text-[11px]">(${qNum}) ${q.a + q.b}</span>`;
         answersDiv.insertAdjacentHTML('beforeend', ansHtml);
       });
     }
